@@ -28,6 +28,7 @@ struct network
         int epoch
     ) -> bool;
 
+    // TODO currently, output label was tansformed to tensor type
     // TODO TensorIterator is actually std::vector<tensor>::iterator
     template < class Error, class Optimizer, class TensorIterator>
     void train_once<(
@@ -44,6 +45,16 @@ struct network
         TensorIterator desired_outputs,
         size_t batch_size
     );
+
+    auto forward_propagation(tensor const& input) -> tensor
+    {
+        return forward_propagation({input})[0];
+    }
+
+    auto forward_propagation(std::vector<tensor> const& input) -> std::vector<tensor>
+    {
+        return net.forward(input);
+    }
 
 private:
     network_type net;
