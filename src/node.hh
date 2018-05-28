@@ -17,16 +17,20 @@ struct node
 
     friend void connect(
         std::shared_ptr<layer>& prev, std::shared_ptr<layer>& next,
-        size_t head_index, size_t tail_index
+        size_t out_index, size_t in_index
     );
 
 protected:
-    std::shared_ptr<edge> prev;
-    std::shared_ptr<edge> next;
+    std::vector<std::shared_ptr<edge>> input;
+    std::vector<std::shared_ptr<edge>> output;
 };
 
 struct edge
 {
+    edge(shape3d_t shape) : data(shape.size()), grad(shape.size())
+    {
+    }
+
     tensor data;
     tensor grad;
     std::weak_ptr<node> prev;

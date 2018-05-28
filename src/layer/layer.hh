@@ -10,8 +10,9 @@ struct layer : node
 {
     layer(
         std::vector<data_type> const& in_types,
-        std::vector<data_type> const& out_typos
-    ) : in_types{in_types}, out_types{out_types}
+        std::vector<data_type> const& out_types
+    ) : in_types{in_types}, out_types{out_types},
+        in_channels(in_types.size()), out_channels(out_types.size())
     {
     }
 
@@ -19,10 +20,14 @@ struct layer : node
 
     virtual void forward_propagation()  = 0;
     virtual void backward_propagation() = 0;
-    virtual auto in_shape()  -> std::vector<shape3d_t> = 0;
-    virtual auto out_shape() -> std::vector<shape3d_t> = 0;
+    virtual auto input_shapes()  -> std::vector<shape3d_t> = 0;
+    virtual auto output_shapes() -> std::vector<shape3d_t> = 0;
+    virtual auto input_shape(size_t)  -> shape3d_t = 0;
+    virtual auto output_shape(size_t) -> shape3d_t = 0;
 
 protected:
+    size_t in_channels;
+    size_t out_channels;
     std::vector<data_type> in_types;
     std::vector<data_type> out_types;
 };
@@ -35,12 +40,14 @@ auto& operator<<(layer& lhs, layer& rhs)
 
 inline void connect(
     std::shared_ptr<layer>& prev, std::shared_ptr<layer>& next,
-    size_t head_index = 0, size_t tail_index = 0)
+    size_t out_index = 0, size_t in_index = 0)
 {
-    next->prev = std::make_shared<edge>();
-    prev->next = next->prev;
-    next->prev->prev = prev;
-    next->prev->next = next;
+    // TODO assert prev->output_shape(head_index) == next->input_shape(tail_index)
+    // TODO assume each layer all input channels already alloced
+    // next->input[0] = std::make_shared<edge>(next->input_shape(tail_index));
+    prev->output[out_index] = next->input[in_index];
+    next->input[in_index]->prev = prev;
+    next->input[in_index]->next = next;
 }
 
 } // namespace yonn

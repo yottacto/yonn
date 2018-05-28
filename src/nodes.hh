@@ -50,7 +50,7 @@ protected:
         all_nodes.emplace_back(l);
     }
 
-    // TODO if you frequently change the network type, maybe std::list<> is
+    // TODO if the network is being frequently changed, maybe std::list<> is
     // better
     std::vector<std::shared_ptr<layer>> own_nodes;
     // TODO all_nodes use raw pointer?
@@ -66,6 +66,7 @@ struct sequential : nodes<sequential>
         emplace_back(std::forward<Layer>(l));
         if (all_nodes.size() != 1) {
             connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
+
         }
     }
 };

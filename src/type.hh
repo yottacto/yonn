@@ -3,6 +3,7 @@
 namespace yonn
 {
 
+// TODO unsigned int or unsigned long
 using size_t = unsigned int;
 
 enum class data_type
