@@ -32,6 +32,9 @@ struct edge
     {
     }
 
+    auto get_data() -> tensor* { return &data; }
+    auto get_grad() -> tensor* { return &grad; }
+
     tensor data;
     tensor grad;
     std::weak_ptr<node> prev;

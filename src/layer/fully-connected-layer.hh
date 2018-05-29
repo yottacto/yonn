@@ -25,9 +25,26 @@ struct fully_conneceted_layer : layer
     auto input_shape(size_t) -> shape3d_t override;
 
 private:
+    core::framework::op_kernel_context forward_context;
+    core::framework::op_kernel_context backward_context;
     std::shared_ptr<core::framework::op_kernel> forward_kernel;
     std::shared_ptr<core::framework::op_kernel> backward_kernel;
 };
+
+void fully_conneceted_layer::forward_propagation()
+{
+    std::vector<tensor*> in_data(in_channels);
+    for (size_t i{0}; i < in_channels; i++)
+        in_data[i] = input[i]->get_data();
+    std::vector<tensor*> out_data(out_channels);
+    for (size_t i{0}; i < out_channels; i++)
+        out_data[i] = output[i]->get_data();
+
+    forward_context.set_in_out(in_data, out_data);
+    forward_context.set_engine(layer::engine());
+
+    forward_kernel.compute(forward_context);
+}
 
 } // namespace yonn
 

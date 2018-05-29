@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "core/backend.hh"
 #include "node.hh"
 #include "type.hh"
 
@@ -10,9 +11,11 @@ struct layer : node
 {
     layer(
         std::vector<data_type> const& in_types,
-        std::vector<data_type> const& out_types
+        std::vector<data_type> const& out_types,
+        core::backend backend
     ) : in_types{in_types}, out_types{out_types},
-        in_channels(in_types.size()), out_channels(out_types.size())
+        in_channels(in_types.size()), out_channels(out_types.size()),
+        backend{backend}
     {
     }
 
@@ -25,11 +28,19 @@ struct layer : node
     virtual auto input_shape(size_t)  -> shape3d_t = 0;
     virtual auto output_shape(size_t) -> shape3d_t = 0;
 
+    auto engine() const -> core::backend { return backend; }
+
+    void forward()
+    {
+        forward_propagation();
+    }
+
 protected:
-    size_t in_channels;
-    size_t out_channels;
     std::vector<data_type> in_types;
     std::vector<data_type> out_types;
+    size_t in_channels;
+    size_t out_channels;
+    core::backend backend;
 };
 
 auto& operator<<(layer& lhs, layer& rhs)
