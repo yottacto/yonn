@@ -27,6 +27,7 @@ protected:
 
 struct edge
 {
+    //  FIXME tensor has outer vector wrapper
     edge(shape3d_t shape) : data(shape.size()), grad(shape.size())
     {
     }
