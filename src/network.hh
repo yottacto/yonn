@@ -22,8 +22,8 @@ struct network
     template < class Error, class Optimizer>
     auto train(
         Optimizer& optimizer,
-        std::vector<tensor> const& inputs,
-        std::vector<tensor> const& desired_outputs,
+        tensor const& inputs,
+        tensor const& desired_outputs,
         size_t batch_sze,
         int epoch
     ) -> bool;
@@ -46,20 +46,21 @@ struct network
         size_t batch_size
     );
 
-    auto forward_propagation(tensor const& input) -> tensor
+    // FIXME refactor tensor
+    auto forward_propagation(std::vector<float> const& input) -> tensor
     {
-        return forward_propagation({input})[0];
+        return forward_propagation({input});
     }
 
-    auto forward_propagation(std::vector<tensor> const& input) -> std::vector<tensor>
+    auto forward_propagation(tensor const& input) -> tensor
     {
         return net.forward(input);
     }
 
 private:
     network_type net;
-    std::vector<tensor> in_batch;
-    std::vector<tensor> desired_out_batch;
+    tensor in_batch;
+    tensor desired_out_batch;
 };
 
 template <class Layer>
@@ -79,8 +80,8 @@ template <
 >
 auto network<Net>::train(
     Optimizer& optimizer,
-    std::vector<tensor> const& inputs,
-    std::vector<tensor> const& desired_outputs,
+    tensor const& inputs,
+    tensor const& desired_outputs,
     size_t batch_sze,
     int epoch
 )
