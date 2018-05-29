@@ -1,12 +1,16 @@
 #pragma once
+#include <vector>
 
 namespace yonn
 {
 
 using value_type = float;
+using vec_t = std::vector<value_type>;
 
 // TODO unsigned int or unsigned long
 using size_t = unsigned int;
+
+using label_t = size_t;
 
 enum class data_type
 {

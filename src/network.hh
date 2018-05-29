@@ -23,7 +23,7 @@ struct network
     auto train(
         Optimizer& optimizer,
         tensor const& inputs,
-        vec_t const& desired_outputs,
+        std::vector<label_t> const& desired_outputs,
         size_t batch_sze,
         int epoch
     ) -> bool;
@@ -59,7 +59,10 @@ struct network
     }
 
     template <class Error>
-    void backward_progapation(tensor const& output, vec_t const& desired_output)
+    void backward_progapation(
+        tensor const& output,
+        std::vector<label_t> const& desired_output
+    )
     {
         tensor delta = gradient<Error>(output, desired_output);
         net.backward(delta);
@@ -68,7 +71,7 @@ struct network
 private:
     network_type net;
     tensor in_batch;
-    vec_t desired_out_batch;
+    std::vector<label_t> desired_out_batch;
 };
 
 template <class Layer>
@@ -89,7 +92,7 @@ template <
 auto network<Net>::train(
     Optimizer& optimizer,
     tensor const& inputs,
-    vec_t const& desired_outputs,
+    std::vector<label_t> const& desired_outputs,
     size_t batch_sze,
     int epoch
 )
