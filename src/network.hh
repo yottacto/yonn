@@ -57,6 +57,13 @@ struct network
         return net.forward(input);
     }
 
+    template <class Error>
+    void backward_progapation(tensor const& output, tensor const& desired_output)
+    {
+        tensor delta = gradient<Error>(output, desired_output);
+        net.backward(delta);
+    }
+
 private:
     network_type net;
     tensor in_batch;
@@ -121,8 +128,8 @@ void network<Net>::train_once<(
 {
     if (size == 1) {
         back_propagation<Error>(
-            forward_propagation(*inputs),
-            *desired_outputs
+            forward_propagation({*inputs}),
+            {*desired_outputs}
         );
         net.update_weights(optimizer);
     } else {

@@ -19,11 +19,30 @@ struct sequential : nodes<sequential>
         }
     }
 
-    auto forward(std::vector<tensor> const& first) -> std::vector<tensor>;
+    auto forward(tensor const& first) -> tensor;
+    void backward(tensor const& first);
 };
 
-auto sequential::forward(std::vector<tensor> const& first)
+auto sequential::forward(tensor const& first)
 {
+    all_nodes.front()->set_input_data(first);
+
+    for (auto const& l : all_nodes)
+        l->forward();
+
+    tensor out;
+    // TODO output channel index?
+    all_nodes.back()->output(out);
+    // TODO normalize output
+    return out;
+}
+
+void sequential::backward(tensor const& first)
+{
+    own_nodes.back()->set_output_grad(first);
+
+    for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
+        (*l)->backward();
 }
 
 } // namespace topo
