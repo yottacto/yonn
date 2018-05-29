@@ -4,6 +4,7 @@
 #include <utility>
 #include <type_traits>
 #include "layer/layer.hh"
+#include "tensor.hh"
 
 namespace yonn
 {
@@ -13,7 +14,8 @@ struct nodes
 {
 
     void add(layer&& l) { Derived::add(l); }
-    void forward() { Derived::forward(); }
+    void forward(std::vector<tensor> const& fisrt) { Derived::forward(first); }
+    // TODO
     void backward() { Derived::backward(); }
 
 protected:
@@ -58,21 +60,7 @@ protected:
 };
 
 
-struct sequential : nodes<sequential>
-{
-    template <class Layer>
-    void add(Layer&& l)
-    {
-        emplace_back(std::forward<Layer>(l));
-        if (all_nodes.size() != 1) {
-            connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
-
-        }
-    }
-};
-
 // implementation of nodes<Derived>
-
 
 } // namespace yonn
 
