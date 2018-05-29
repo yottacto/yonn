@@ -3,6 +3,8 @@
 namespace yonn
 {
 
+using value_type = float;
+
 // TODO unsigned int or unsigned long
 using size_t = unsigned int;
 
