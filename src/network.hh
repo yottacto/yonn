@@ -19,46 +19,47 @@ struct network
     }
 
     // TODO callback function on each epoch and minibatch
-    template < class Error, class Optimizer>
+    template <class Error, class Optimizer>
     auto train(
         Optimizer& optimizer,
         tensor const& inputs,
-        tensor const& desired_outputs,
+        vec_t const& desired_outputs,
         size_t batch_sze,
         int epoch
     ) -> bool;
 
     // TODO currently, output label was tansformed to tensor type
-    // TODO TensorIterator is actually std::vector<tensor>::iterator
-    template < class Error, class Optimizer, class TensorIterator>
+    // TODO TensorIterator is actually std::vector<tensor>::iterator, same for
+    // OutIterator
+    template <class Error, class Optimizer, class TensorIterator, class OutIterator>
     void train_once<(
         Optimizer& optimizer,
         TensorIterator inputs,
-        TensorIterator desired_outputs,
+        OutIterator desired_outputs,
         size_t size
     );
 
-    template <class Error, class Optimizer, class TensorIterator>
+    template <class Error, class Optimizer, class TensorIterator, class OutIterator>
     void train_onebatch(
         Optimizer& optimizer,
         TensorIterator inputs,
-        TensorIterator desired_outputs,
+        OutIterator desired_outputs,
         size_t batch_size
     );
 
     // FIXME refactor tensor
-    auto forward_propagation(std::vector<float> const& input) -> tensor
+    auto forward_propagation(std::vector<float> const& input) -> vec_t
     {
         return forward_propagation({input});
     }
 
-    auto forward_propagation(tensor const& input) -> tensor
+    auto forward_propagation(tensor const& input) -> vec_t
     {
         return net.forward(input);
     }
 
     template <class Error>
-    void backward_progapation(tensor const& output, tensor const& desired_output)
+    void backward_progapation(tensor const& output, vec_t const& desired_output)
     {
         tensor delta = gradient<Error>(output, desired_output);
         net.backward(delta);
@@ -67,7 +68,7 @@ struct network
 private:
     network_type net;
     tensor in_batch;
-    tensor desired_out_batch;
+    vec_t desired_out_batch;
 };
 
 template <class Layer>
@@ -88,7 +89,7 @@ template <
 auto network<Net>::train(
     Optimizer& optimizer,
     tensor const& inputs,
-    tensor const& desired_outputs,
+    vec_t const& desired_outputs,
     size_t batch_sze,
     int epoch
 )
@@ -117,7 +118,8 @@ template <class Net>
 template <
     class Error,
     class Optimizer,
-    class TensorIterator
+    class TensorIterator,
+    class OutIterator
 >
 void network<Net>::train_once<(
     Optimizer& optimizer,
@@ -138,11 +140,11 @@ void network<Net>::train_once<(
 }
 
 template <class Net>
-template <class Error, class Optimizer, class TensorIterator>
+template <class Error, class Optimizer, class TensorIterator, class OutIterator>
 void network<Net>::train_onebatch(
     Optimizer& optimizer,
     TensorIterator inputs,
-    TensorIterator desired_outputs,
+    OutIterator desired_outputs,
     size_t batch_size
 )
 {
