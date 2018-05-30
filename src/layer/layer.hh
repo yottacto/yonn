@@ -30,9 +30,20 @@ struct layer : node
 
     auto engine() const -> core::backend { return backend; }
 
-    void forward()
+    void forward() { forward_propagation(); }
+
+    void set_input_data(tensor const& input)
     {
-        forward_propagation();
+        // TODO assume all needed memory allocated and for opencl need to
+        // deal with seperately
+        this->input[0]->data = input;
+    }
+
+    void set_output_grad(tensor const& grad)
+    {
+        // TODO assume all needed memory allocated and for opencl need to
+        // deal with seperately
+        output[0]->grad = grad;
     }
 
 protected:

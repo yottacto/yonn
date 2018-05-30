@@ -7,6 +7,8 @@ namespace yonn
 namespace loss_function
 {
 
+// TODO opencl backend
+
 template <class Error>
 auto gradient(vec_t const& scores, label_t y)
 {
