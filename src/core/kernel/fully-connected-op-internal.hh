@@ -17,10 +17,53 @@ inline void fully_connected_op_internal(
 {
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
-        // TODO
+        auto const& in = in_data[sample];
+        auto& out      = out_data[sample];
+        // FIXME params out_size and below in_size
+        for (size_t i{0}; i < out.size(); i++) {
+            out[i] = 0;
+            for (size_t c = 0; c < in.size(); c++)
+                out[i] += in[c] * w[c * out.size() + i];
+
+            // FIXME
+            // if (has_bias)
+            {
+                out[i] += bias[i];
+            }
+        }
     }
 }
 
+inline void fully_connected_op_internal(
+    tensor const& in_data,
+    vec_t const& w,
+    tensor& dw,
+    tensor& db,
+    tensor& dout,
+    tensor& dx
+)
+{
+    // TODO clear grads or just assign the newvalue
+    // TODO parallelize
+    for (size_t sample{0}; sample < in_data.size(); sample++) {
+        // derivatives for input data, heere dx
+        // FIXME params in_size and out_size
+        for (size_t i{0}; i < in_size; i++)
+            // TODO dot product and vectorization
+            dx[sample][i] = dot(
+                dout[sample][0], w[i * out_size], out_size
+            );
+
+        // derivatives for w, here dw
+        for (size_t i{0}; i < in_size; i++)
+            for (size_t j{0}; j < out_size; j++)
+                dw[sample][i * out_size + j] = in_data[sample][i] * dout[sample][j];
+
+        // derivatives for bias, here db
+        for (size_t i{0}; i < out_size; i++)
+            db[sample][i] = dout[sample][i];
+    }
+}
 
 } // namespace kernel
 } // namespace coer

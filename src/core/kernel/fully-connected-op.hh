@@ -12,16 +12,11 @@ namespace kernel
 
 struct fully_connected_op : framework::op_kernel
 {
-    fully_connected_op(
-        size_t in_dim,
-        size_t out_dim,
-        bool has_bias = true,
-        backend backend = default_engine()
-    )
+    fully_connected_op()
     {
     }
 
-    void compute(framework::op_kernel_context& context)
+    void compute(framework::op_kernel_context& context) override
     {
         auto const engine = context.engine();
 
@@ -34,6 +29,37 @@ struct fully_connected_op : framework::op_kernel
 
             fully_connected_op_internal(
                 in_data, w[0], bias[0], out_data
+            );
+        } else if (engine == core::backend::opencl) {
+        } else {
+            // TODO not support backend engine
+        }
+    }
+
+private:
+};
+
+struct fully_connected_grad_op : framework::op_kernel
+{
+    fully_connected_grad_op()
+    {
+    }
+
+    void compute(framework::op_kernel_context& context) override
+    {
+        auto const engine = context.engine();
+
+        if (engine == core::backend::internal) {
+            tensor const& in_data = context.input(0);
+            tensor const& w = context.input(1);
+            tensor& dw = context.input_grad(1);
+            // TODO params to specify has_bias, using pointer and nullptr
+            tensor& db = context.input_grad(2);
+            tensor& dx = context.input_grad(0);
+            tensor& dout = context.output_grad(0);
+
+            fully_connected_op_internal(
+                in_data, w[0], dw, bias[0], out_data, dout, dx
             );
         } else if (engine == core::backend::opencl) {
         } else {

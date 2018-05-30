@@ -31,6 +31,7 @@ struct layer : node
     auto engine() const -> core::backend { return backend; }
 
     void forward() { forward_propagation(); }
+    void backward() { backward_propagation(); }
 
     void set_input_data(tensor const& input)
     {
