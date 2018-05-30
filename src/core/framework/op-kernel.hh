@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
+#include <memory>
 #include "tensor.hh"
 #include "core/backend.hh"
+#include "core/parameter/parameter.hh"
 
 namespace yonn
 {
@@ -57,6 +59,10 @@ struct op_kernel_context
 
 struct op_kernel
 {
+    op_kernel() = default;
+    explicit op_kernel(parameter const& params)
+        : params(new parameter(params)) {}
+
     virtual ~op_kernel() = default;
 
     virtual void compute() = 0;

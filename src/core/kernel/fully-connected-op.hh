@@ -2,6 +2,7 @@
 #include "type.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/backend.hh"
+#include "core/parameter/fully-parameter.hh"
 
 namespace yonn
 {
@@ -12,7 +13,8 @@ namespace kernel
 
 struct fully_connected_op : framework::op_kernel
 {
-    fully_connected_op()
+    fully_connected_op(fully_parameter const& params)
+        : params{params}
     {
     }
 
@@ -37,11 +39,13 @@ struct fully_connected_op : framework::op_kernel
     }
 
 private:
+    fully_parameter params;
 };
 
 struct fully_connected_grad_op : framework::op_kernel
 {
-    fully_connected_grad_op()
+    fully_connected_grad_op(fully_parameter const& params)
+        : params{params}
     {
     }
 
@@ -68,6 +72,7 @@ struct fully_connected_grad_op : framework::op_kernel
     }
 
 private:
+    fully_parameter params;
 };
 
 } // namespace kernel
