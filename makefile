@@ -9,7 +9,7 @@ LD = clang++
 
 # debug flags -D DEBUGGING_ENABLED -g
 CCFLAGS = -fno-operator-names -march=native -std=c++14 -Wall -Wextra -Isrc/ -O3
-LDFLAGS = -fopenmp -fsanitize=undefined
+LDFLAGS = 
 OBJECTS = $(BUILD)/src/main.o
 BUILD = build
 BIN = $(BUILD)/build
@@ -36,7 +36,7 @@ $(BUILD)/:
 $(BUILD)/src: | $(BUILD)/
 	@echo -e "$(COLOR_ACT)making directory $(COLOR_ARG)$(BUILD)/src$(COLOR_RST)..."
 	mkdir -p $(BUILD)/src
-$(BUILD)/src/main.o: src/main.cc src/core/backend.hh src/layer/layer.hh src/loss-function/absolute.hh src/loss-function/loss-function.hh src/network.hh src/node.hh src/nodes.hh src/tensor.hh src/topo/sequential.hh src/type.hh | $(BUILD)/src
+$(BUILD)/src/main.o: src/main.cc src/core/backend.hh src/core/framework/op-kernel.hh src/core/kernel/fully-connected-op-internal.hh src/core/kernel/fully-connected-op.hh src/core/parameter/fully-parameter.hh src/core/parameter/parameter.hh src/layer/fully-connected-layer.hh src/layer/layer.hh src/loss-function/absolute.hh src/loss-function/loss-function.hh src/network.hh src/node.hh src/nodes.hh src/tensor.hh src/topo/sequential.hh src/type.hh src/util.hh | $(BUILD)/src
 	@echo -e "$(COLOR_ACT)compiling $(COLOR_ARG)src/main.cc$(COLOR_RST)..."
 	$(CC) -c -o '$@' '$<' $(CCFLAGS)
 $(BIN): $(OBJECTS) | $(BUILD)/
