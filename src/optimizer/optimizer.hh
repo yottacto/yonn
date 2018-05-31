@@ -3,6 +3,8 @@
 
 namespace yonn
 {
+namespace optimizer
+{
 
 struct optimizer
 {
@@ -16,9 +18,9 @@ struct optimizer
     virtual void update(vec_t const& dw, vec_t& w) = 0;
 };
 
-struct naive_optimizer : optimizer
+struct naive : optimizer
 {
-    naive_optimizer(value_type alpha) : alpha{alpha} {}
+    naive(value_type alpha) : alpha{alpha} {}
 
     void update(vec_t const& dw, vec_t& w) override
     {
@@ -29,5 +31,6 @@ struct naive_optimizer : optimizer
     value_type alpha;
 };
 
+} // namespace optimizer
 } // namespace yonn
 
