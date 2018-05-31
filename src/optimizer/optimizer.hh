@@ -20,7 +20,7 @@ struct optimizer
 
 struct naive : optimizer
 {
-    naive(value_type alpha) : alpha{alpha} {}
+    naive(value_type alpha = 0.01) : alpha{alpha} {}
 
     void update(vec_t const& dw, vec_t& w) override
     {

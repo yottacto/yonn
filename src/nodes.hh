@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "layer/layer.hh"
 #include "tensor.hh"
+#include "optimizer/optimizer.hh"
 
 namespace yonn
 {
@@ -24,6 +25,12 @@ struct nodes
     void backward(tensor const& first)
     {
         Derived::backward(first);
+    }
+
+    void update_weight(optimizer::optimizer* opt)
+    {
+        for (auto& l : all_nodes)
+            l->update_wegith(opt);
     }
 
 protected:

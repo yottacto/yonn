@@ -4,6 +4,7 @@
 #include "core/backend.hh"
 #include "node.hh"
 #include "type.hh"
+#include "optimizer/optimizer.hh"
 
 namespace yonn
 {
@@ -68,6 +69,23 @@ struct layer : node
     void output_data(tensor& out)
     {
         out = output[0]->data;
+    }
+
+    auto get_input_data(size_t i) -> vec_t&
+    {
+        return input[i]->data[0];
+    }
+
+    // TODO init weight
+
+    void update_weight(optimizer::optimizer* opt)
+    {
+        // TODO mark trainable for data, here the input[0] is not trainable
+        for (size_t i{1}; i < in_types.size(); i++) {
+            input[i]->merge_grads();
+            auto& weight = get_input_data(i);
+            opt->update(input[i]->grad[0], weight);
+        }
     }
 
 protected:

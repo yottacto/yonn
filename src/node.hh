@@ -36,6 +36,18 @@ struct edge
     auto get_data() -> tensor* { return &data; }
     auto get_grad() -> tensor* { return &grad; }
 
+    // merge all grads to grad[0]
+    void merge_grads()
+    {
+        // TODO parallelize
+        for (size_t i{1}; i < grad.size(); i++)
+            for (size_t j{0}; j < grad[0].size(); j++)
+                grad[0][j] += grad[i][j];
+
+        for (size_t j{0}; j < grad[0].size(); j++)
+            grad[0][j] /= value_type(grad.size());
+    }
+
     tensor data;
     tensor grad;
     std::weak_ptr<node> prev;
