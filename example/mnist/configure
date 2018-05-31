@@ -5,7 +5,7 @@ use warnings;
 use autodie qw[:all];
 
 ############# default configuration ##############
-my $base_dir__source = "src";
+my $base_dir__source = "../../src";
 my $base_dir__third_party = "third-party";
 
 my @include_dir__third_party = ();
@@ -18,7 +18,7 @@ my $compiler__bin = "clang++";
 my $compiler__flags__standard = "c++14";
 my $compiler__flags__optimization_level = "3";
 my $compiler__flags__architecture = "native";
-my @compiler__flags__extra = qw[-Wall -Wextra -Isrc/];
+my @compiler__flags__extra = qw[-Wall -Wextra -I../../src/];
 
 my $loader__bin = "clang++";
 my @loader__flags__extra = qw[];
@@ -29,7 +29,7 @@ my $build__flags_path = "build.flags";
 my $build__makefile_path = "makefile";
 my $build__output_dir = "build";
 my $build__output_bin = "build";
-my $build__main_impl = "main.cc";
+my $build__main_impl = "../example/mnist/main.cc";
 
 my $makefile__show_commands = 1;
 my @makefile__commands__test = (
