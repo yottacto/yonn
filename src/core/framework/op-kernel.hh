@@ -39,6 +39,7 @@ struct op_kernel_context
     }
 
     auto engine() const -> core::backend { return backend; }
+    auto set_engine(core::backend engine) { backend = engine; }
     auto input(size_t index)       -> tensor&       { return *(*in_data)[index]; }
     auto input(size_t index) const -> tensor const& { return *(*in_data)[index]; }
     auto output(size_t index)       -> tensor&       { return *(*out_data)[index]; }
@@ -60,12 +61,10 @@ struct op_kernel_context
 struct op_kernel
 {
     op_kernel() = default;
-    explicit op_kernel(parameter const& params)
-        : params(new parameter(params)) {}
 
     virtual ~op_kernel() = default;
 
-    virtual void compute() = 0;
+    virtual void compute(op_kernel_context& context) = 0;
 
 protected:
 };

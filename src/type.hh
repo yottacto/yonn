@@ -25,6 +25,10 @@ struct shape3d
 {
     using size_type = T;
 
+    shape3d() = default;
+    shape3d(size_type height, size_type weight, size_type depth)
+        : height{height}, weight{weight}, depth{depth} {}
+
     auto area() const
     {
         return height * weight;

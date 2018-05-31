@@ -1,5 +1,7 @@
 #pragma once
 #include "tensor.hh"
+#include "util.hh"
+#include "core/parameter/fully-parameter.hh"
 
 namespace yonn
 {
@@ -12,18 +14,22 @@ inline void fully_connected_op_internal(
     tensor const& in_data,
     vec_t const& w,
     vec_t const& bias,
-    tensor& out_data
+    tensor& out_data,
+    fully_parameter const& params
 )
 {
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto& out      = out_data[sample];
+        auto const& in_size = params.in_size;
+        auto const& out_size = params.out_size;
+        auto const& has_bias = params.has_bias;
         // FIXME params out_size and below in_size
-        for (size_t i{0}; i < out.size(); i++) {
+        for (size_t i{0}; i < out_size; i++) {
             out[i] = 0;
-            for (size_t c = 0; c < in.size(); c++)
-                out[i] += in[c] * w[c * out.size() + i];
+            for (size_t c = 0; c < in_size; c++)
+                out[i] += in[c] * w[c * out_size + i];
 
             // FIXME
             // if (has_bias)
@@ -40,9 +46,13 @@ inline void fully_connected_op_internal(
     tensor& dw,
     tensor& db,
     tensor& dout,
-    tensor& dx
+    tensor& dx,
+    fully_parameter const& params
 )
 {
+    auto const& in_size = params.in_size;
+    auto const& out_size = params.out_size;
+    auto const& has_bias = params.has_bias;
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
@@ -50,8 +60,10 @@ inline void fully_connected_op_internal(
         // FIXME params in_size and out_size
         for (size_t i{0}; i < in_size; i++)
             // TODO dot product and vectorization
-            dx[sample][i] = dot(
-                dout[sample][0], w[i * out_size], out_size
+            dx[sample][i] = compute::dot(
+                std::begin(dout[sample]),
+                std::next(std::begin(w), i * out_size),
+                out_size
             );
 
         // derivatives for w, here dw

@@ -11,7 +11,8 @@ struct edge;
 
 struct node
 {
-    virtual void compute() = 0;
+    node(size_t in_size, size_t out_size)
+        : input(in_size), output(out_size) {}
 
     virtual ~node() = default;
 

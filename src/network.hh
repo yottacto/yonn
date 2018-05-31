@@ -15,9 +15,10 @@ struct network
 {
     using network_type = Net;
 
-    void add(layer& l)
+    template <class Layer>
+    void add(Layer&& l)
     {
-        net.add(l);
+        net.add(std::forward<Layer>(l));
     }
 
     // TODO callback function on each epoch and minibatch

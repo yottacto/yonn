@@ -1,8 +1,9 @@
 #pragma once
 #include "type.hh"
-#include "core/framework/op-kernel.hh"
 #include "core/backend.hh"
+#include "core/framework/op-kernel.hh"
 #include "core/parameter/fully-parameter.hh"
+#include "core/kernel/fully-connected-op-internal.hh"
 
 namespace yonn
 {
@@ -30,7 +31,7 @@ struct fully_connected_op : framework::op_kernel
             tensor& out_data = context.output(0);
 
             fully_connected_op_internal(
-                in_data, w[0], bias[0], out_data
+                in_data, w[0], bias[0], out_data, params
             );
         } else if (engine == core::backend::opencl) {
         } else {
@@ -57,13 +58,13 @@ struct fully_connected_grad_op : framework::op_kernel
             tensor const& in_data = context.input(0);
             tensor const& w = context.input(1);
             tensor& dw = context.input_grad(1);
-            // TODO params to specify has_bias, using pointer and nullptr
+            // FIXME params to specify has_bias, using pointer and nullptr
             tensor& db = context.input_grad(2);
             tensor& dx = context.input_grad(0);
             tensor& dout = context.output_grad(0);
 
             fully_connected_op_internal(
-                in_data, w[0], dw, bias[0], out_data, dout, dx
+                in_data, w[0], dw, db, dout, dx, params
             );
         } else if (engine == core::backend::opencl) {
         } else {
