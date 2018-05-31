@@ -1,9 +1,26 @@
 #pragma once
 #include <vector>
+#include <algorithm>
 #include "type.hh"
 
 namespace yonn
 {
+
+template <class T>
+T* reverse_endian(T* p)
+{
+    std::reverse(
+        reinterpret_cast<char*>(p),
+        reinterpret_cast<char*>(p) + sizeof(T)
+    );
+    return p;
+}
+
+inline auto is_little_endian()
+{
+    auto x = 1;
+    return *reinterpret_cast<char*>(&x) != 0;
+}
 
 inline auto std_input_types(bool has_bias = true) -> std::vector<data_type>
 {
