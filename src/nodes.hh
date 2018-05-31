@@ -14,9 +14,17 @@ struct nodes
 {
 
     void add(layer&& l) { Derived::add(l); }
-    void forward(std::vector<tensor> const& fisrt) { Derived::forward(first); }
+
+    auto forward(tensor const& first) -> tensor
+    {
+        return Derived::forward(first);
+    }
+
     // TODO
-    void backward(tensor const& first) { Derived::backward(first); }
+    void backward(tensor const& first)
+    {
+        Derived::backward(first);
+    }
 
 protected:
 

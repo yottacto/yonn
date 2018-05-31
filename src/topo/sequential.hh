@@ -23,18 +23,19 @@ struct sequential : nodes<sequential>
     void backward(tensor const& first);
 };
 
-auto sequential::forward(tensor const& first)
+auto sequential::forward(tensor const& first) -> tensor
 {
     all_nodes.front()->set_input_data(first);
 
     for (auto const& l : all_nodes)
         l->forward();
 
-    tensor out;
+    tensor outt;
+    // FIXME
     // TODO output channel index?
-    all_nodes.back()->output(out);
+    all_nodes.back()->output_data(outt);
     // TODO normalize output
-    return out;
+    return outt;
 }
 
 void sequential::backward(tensor const& first)

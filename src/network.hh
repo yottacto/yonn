@@ -2,8 +2,10 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
-#include "layer/layer.hh"
 #include "nodes.hh"
+#include "layer/layer.hh"
+#include "loss-function/loss-function.hh"
+#include "topo/sequential.hh"
 
 namespace yonn
 {
@@ -32,7 +34,7 @@ struct network
     // TODO TensorIterator is actually std::vector<tensor>::iterator, same for
     // OutIterator
     template <class Error, class Optimizer, class TensorIterator, class OutIterator>
-    void train_once<(
+    void train_once(
         Optimizer& optimizer,
         TensorIterator inputs,
         OutIterator desired_outputs,
@@ -59,12 +61,12 @@ struct network
     }
 
     template <class Error>
-    void backward_progapation(
+    void backward_propagation(
         tensor const& output,
         std::vector<label_t> const& desired_output
     )
     {
-        tensor delta = gradient<Error>(output, desired_output);
+        tensor delta = loss_function::gradient<Error>(output, desired_output);
         net.backward(delta);
     }
 
@@ -75,7 +77,7 @@ private:
 };
 
 template <class Layer>
-auto& operator<<(network<sequential>& net, Layer&& l)
+auto& operator<<(network<topo::sequential>& net, Layer&& l)
 {
     net.add(std::forward<Layer>(l));
     return net;
@@ -93,9 +95,9 @@ auto network<Net>::train(
     Optimizer& optimizer,
     tensor const& inputs,
     std::vector<label_t> const& desired_outputs,
-    size_t batch_sze,
+    size_t batch_size,
     int epoch
-)
+) -> bool
 {
     // TODO network phase
     // TODO reset or init weight
@@ -104,12 +106,12 @@ auto network<Net>::train(
     desired_out_batch.resize(batch_size);
 
     for (auto round = 0; round < epoch; round++) {
-        for (size_t i = 0; i < input.size(); i += batch_size) {
+        for (size_t i{0}; i < inputs.size(); i += batch_size) {
             train_once<Error>(
                 optimizer,
                 std::next(std::begin(inputs), i),
                 std::next(std::begin(desired_outputs), i),
-                std::min(batch_size, inputs.size() - i)
+                std::min<size_t>(batch_size, inputs.size() - i)
             );
         }
     }
@@ -124,15 +126,15 @@ template <
     class TensorIterator,
     class OutIterator
 >
-void network<Net>::train_once<(
+void network<Net>::train_once(
     Optimizer& optimizer,
     TensorIterator inputs,
-    TensorIterator desired_outputs,
+    OutIterator desired_outputs,
     size_t size
 )
 {
     if (size == 1) {
-        back_propagation<Error>(
+        backward_propagation<Error>(
             forward_propagation({*inputs}),
             {*desired_outputs}
         );
@@ -158,8 +160,8 @@ void network<Net>::train_onebatch(
         std::begin(desired_out_batch)
     );
 
-    back_propagation<Error>(
-        forward_propagation(in_bacth),
+    backward_propagation<Error>(
+        forward_propagation(in_batch),
         desired_out_batch
     );
     net.update_weights(optimizer);

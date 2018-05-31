@@ -47,6 +47,11 @@ struct layer : node
         output[0]->grad = grad;
     }
 
+    void output_data(tensor& out)
+    {
+        out = output[0]->data;
+    }
+
 protected:
     std::vector<data_type> in_types;
     std::vector<data_type> out_types;
