@@ -2,6 +2,7 @@
 #include <vector>
 #include "nodes.hh"
 #include "tensor.hh"
+#include "optimizer/optimizer.hh"
 
 namespace yonn
 {
@@ -21,6 +22,7 @@ struct sequential : nodes<sequential>
 
     auto forward(tensor const& first) -> tensor;
     void backward(tensor const& first);
+    void update_weight(optimizer::optimizer* opt);
 };
 
 auto sequential::forward(tensor const& first) -> tensor
@@ -44,6 +46,12 @@ void sequential::backward(tensor const& first)
 
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
         (*l)->backward();
+}
+
+void sequential::update_weight(optimizer::optimizer* opt)
+{
+    for (auto& l : all_nodes)
+        l->update_weight(opt);
 }
 
 } // namespace topo

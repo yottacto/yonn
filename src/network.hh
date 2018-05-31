@@ -51,12 +51,12 @@ struct network
     );
 
     // FIXME refactor tensor
-    auto forward_propagation(std::vector<float> const& input) -> vec_t
+    auto forward_propagation(vec_t const& input) -> tensor
     {
-        return forward_propagation({input});
+        return forward_propagation(tensor{input});
     }
 
-    auto forward_propagation(tensor const& input) -> vec_t
+    auto forward_propagation(tensor const& input) -> tensor
     {
         return net.forward(input);
     }
@@ -139,7 +139,7 @@ void network<Net>::train_once(
             forward_propagation({*inputs}),
             {*desired_outputs}
         );
-        net.update_weights(optimizer);
+        net.update_weight(&optimizer);
     } else {
         train_onebatch<Error>(optimizer, inputs, desired_outputs, size);
     }
@@ -165,7 +165,7 @@ void network<Net>::train_onebatch(
         forward_propagation(in_batch),
         desired_out_batch
     );
-    net.update_weights(optimizer);
+    net.update_weight(&optimizer);
 }
 
 } // namespace yonn
