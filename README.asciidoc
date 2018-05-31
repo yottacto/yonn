@@ -3,4 +3,5 @@
 === Design revision
 
 - is it needful to make every layer's op inheirts from `op_kernel`
+- rule of five (zero), virtual destructor
 
