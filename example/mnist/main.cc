@@ -1,12 +1,5 @@
 #include <iostream>
-#include "network.hh"
-#include "loss-function/absolute.hh"
-#include "layer/fully-connected-layer.hh"
-#include "topo/sequential.hh"
-#include "tensor.hh"
-#include "io/mnist-parser.hh"
-#include "loss-function/absolute.hh"
-#include "optimizer/optimizer.hh"
+#include "yonn.hh"
 
 int main()
 {
