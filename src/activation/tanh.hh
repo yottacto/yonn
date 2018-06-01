@@ -10,6 +10,9 @@ namespace activation
 
 struct tanh : layer
 {
+    tanh() : layer({data_type::data}, {data_type::data}) {}
+    // TODO explicit specify the dims
+
     void forward_propagation() override;
     void backward_propagation() override;
 
