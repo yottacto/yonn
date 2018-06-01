@@ -44,6 +44,34 @@ auto sqr(T x)
     return x * x;
 }
 
+inline auto in_length(
+    size_t in_length,
+    size_t window_size,
+    padding pad_type
+)
+{
+    return pad_type == padding::same
+        ? in_length + window_size - 1
+        : in_length;
+}
+
+inline auto out_length(
+    size_t in_length,
+    size_t window_size,
+    size_t stride,
+    padding pad_type
+)
+{
+    size_t out_length{0};
+    if (pad_type == padding::same)
+        out_length = in_length;
+    else if (pad_type == padding::valid)
+        out_length = in_length - window_size + 1;
+
+    // TODO the result must be integer
+    return (out_length + stride - 1) / stride;
+}
+
 namespace compute
 {
 

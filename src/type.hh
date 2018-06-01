@@ -21,24 +21,30 @@ enum class data_type
     label,
 };
 
+enum class padding
+{
+    valid,
+    same,  // add zero-padding to keep the image size
+};
+
 template <class T>
 struct shape3d
 {
     using size_type = T;
 
     shape3d() = default;
-    shape3d(size_type weight, size_type height, size_type depth)
-        : weight{weight}, height{height}, depth{depth} {}
+    shape3d(size_type width, size_type height, size_type depth)
+        : width{width}, height{height}, depth{depth} {}
 
     auto area() const
     {
-        return weight * height;
+        return width * height;
     }
 
     auto size() const
     {
         return area() * depth; }
-    size_type weight;
+    size_type width;
     size_type height;
     size_type depth;
 };

@@ -23,7 +23,8 @@ struct fully_connected_layer : layer
     {
         in_shapes.emplace_back(in_dims,  1,       1);
         in_shapes.emplace_back(out_dims, in_dims, 1);
-        in_shapes.emplace_back(out_dims, 1,       1);
+        if (has_bias)
+            in_shapes.emplace_back(out_dims, 1,       1);
 
         out_shapes.emplace_back(out_dims, 1, 1);
 
@@ -31,7 +32,8 @@ struct fully_connected_layer : layer
         // TODO reasoning about this input_shape
         input[0] = std::make_shared<edge>();
         input[1] = std::make_shared<edge>();
-        input[2] = std::make_shared<edge>();
+        if (has_bias)
+            input[2] = std::make_shared<edge>();
 
         output[0] = std::make_shared<edge>();
 
