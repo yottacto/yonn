@@ -1,4 +1,7 @@
 #pragma once
+// TODO remove this
+#include <iostream>
+
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -6,6 +9,7 @@
 #include "layer/layer.hh"
 #include "loss-function/loss-function.hh"
 #include "topo/sequential.hh"
+#include "util.hh"
 
 namespace yonn
 {
@@ -66,6 +70,11 @@ struct network
         return net.forward(input);
     }
 
+    auto forward_prop_max_index(vec_t const& input) -> label_t
+    {
+        return max_index(forward_propagation(input));
+    }
+
     template <class Error>
     void backward_propagation(
         tensor const& output,
@@ -74,6 +83,20 @@ struct network
     {
         tensor delta = loss_function::gradient<Error>(output, desired_output);
         net.backward(delta);
+    }
+
+    auto test(
+        tensor const& inputs,
+        std::vector<label_t> const& desired_outputs
+    ) -> result
+    {
+        result res;
+        for (size_t sample{0}; sample < inputs.size(); sample++) {
+            auto const predicted = forward_prop_max_index(inputs[sample]);
+            auto const actual    = desired_outputs[sample];
+            res.insert(predicted, actual);
+        }
+        return res;
     }
 
 private:
@@ -96,6 +119,8 @@ template <class Net>
 template <
     class Error,
     class Optimizer
+    // class EachBatch,
+    // class EachEpoch
 >
 auto network<Net>::train(
     Optimizer& optimizer,
@@ -103,6 +128,8 @@ auto network<Net>::train(
     std::vector<label_t> const& desired_outputs,
     size_t batch_size,
     int epoch
+    // EachBatch each_batch,
+    // EachEpoch each_epoch
 ) -> bool
 {
     // TODO network phase
@@ -114,7 +141,10 @@ auto network<Net>::train(
     allocate_nsamples(batch_size);
 
     for (auto round = 0; round < epoch; round++) {
+        std::cerr << "epoch: " << round << "\n";
+        auto tmp = 0;
         for (size_t i{0}; i < inputs.size(); i += batch_size) {
+        std::cerr << "\titer: " << tmp++ << ":\n";
             train_once<Error>(
                 optimizer,
                 std::next(std::begin(inputs), i),

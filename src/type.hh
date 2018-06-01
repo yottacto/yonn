@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <unordered_map>
 
 namespace yonn
 {
@@ -36,15 +37,36 @@ struct shape3d
 
     auto size() const
     {
-        return area() * depth;
-    }
-
+        return area() * depth; }
     size_type height;
     size_type weight;
     size_type depth;
 };
 
 using shape3d_t = shape3d<size_t>;
+
+struct result
+{
+    auto accuracy() const
+    {
+        return success * 100. / total;
+    }
+
+    void insert(label_t predicted, label_t actual)
+    {
+        confusion_matrix[predicted][actual]++;
+        total++;
+        if (predicted == actual)
+            success++;
+    }
+
+    size_t success{0};
+    size_t total{0};
+    std::unordered_map<
+        label_t,
+        std::unordered_map<label_t, size_t>
+    > confusion_matrix;
+};
 
 } // namespace yonn
 
