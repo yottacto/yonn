@@ -14,7 +14,7 @@ struct connection_table
     connection_table() = default;
 
     template <unsigned int N>
-    connection_table(bool const arr[N], size_t rows, size_t cols)
+    connection_table(bool const (&arr)[N], size_t rows, size_t cols)
     : rows{rows}, cols{cols}, connected(rows * cols)
     {
         for (auto i = 0u; i < connected.size(); i++)
