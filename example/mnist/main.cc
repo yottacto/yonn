@@ -40,6 +40,9 @@ int main()
         1
     );
 
+    auto r = net.test(test_images, test_labels);
+    std::cerr << "accuracy: " << r.accuracy() << "\n";
+
     std::cout << "hello world\n";
 }
 

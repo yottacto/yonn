@@ -16,12 +16,12 @@ my $pkg_config__bin = "pkg-config";
 
 my $compiler__bin = "clang++";
 my $compiler__flags__standard = "c++14";
-my $compiler__flags__optimization_level = "0";
+my $compiler__flags__optimization_level = "3";
 my $compiler__flags__architecture = "native";
-my @compiler__flags__extra = qw[-Wall -Wextra -I../../src/ -g];
+my @compiler__flags__extra = qw[-Wall -Wextra -I../../src/];
 
 my $loader__bin = "clang++";
-my @loader__flags__extra = qw[-g];
+my @loader__flags__extra = qw[];
 
 my $build__config_path = "build.pl";
 my $build__cache_path = "build.cache";
