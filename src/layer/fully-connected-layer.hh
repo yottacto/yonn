@@ -42,26 +42,6 @@ struct fully_connected_layer : layer
     void forward_propagation() override;
     void backward_propagation() override;
 
-    auto input_shapes() -> std::vector<shape3d_t> override
-    {
-        return in_shapes;
-    }
-
-    auto input_shape(size_t i) -> shape3d_t override
-    {
-        return in_shapes[i];
-    }
-
-    auto output_shapes() -> std::vector<shape3d_t> override
-    {
-        return out_shapes;
-    }
-
-    auto output_shape(size_t i) -> shape3d_t override
-    {
-        return out_shapes[i];
-    }
-
 private:
     core::fully_parameter params;
     core::framework::op_kernel_context forward_context;

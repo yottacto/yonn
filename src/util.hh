@@ -29,6 +29,12 @@ inline auto std_input_types(bool has_bias = true) -> std::vector<data_type>
     return {data_type::data, data_type::weight};
 }
 
+template <class T>
+auto sqr(T x)
+{
+    return x * x;
+}
+
 namespace compute
 {
 

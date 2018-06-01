@@ -26,10 +26,6 @@ struct layer : node
 
     virtual void forward_propagation()  = 0;
     virtual void backward_propagation() = 0;
-    virtual auto input_shapes()  -> std::vector<shape3d_t> = 0;
-    virtual auto output_shapes() -> std::vector<shape3d_t> = 0;
-    virtual auto input_shape(size_t)  -> shape3d_t = 0;
-    virtual auto output_shape(size_t) -> shape3d_t = 0;
 
     void allocate_output()
     {
@@ -87,6 +83,27 @@ struct layer : node
             opt->update(input[i]->grad[0], weight);
         }
     }
+
+    auto input_shapes() -> std::vector<shape3d_t>
+    {
+        return in_shapes;
+    }
+
+    auto input_shape(size_t i) -> shape3d_t
+    {
+        return in_shapes[i];
+    }
+
+    auto output_shapes() -> std::vector<shape3d_t>
+    {
+        return out_shapes;
+    }
+
+    auto output_shape(size_t i) -> shape3d_t
+    {
+        return out_shapes[i];
+    }
+
 
 protected:
     std::vector<data_type> in_types;
