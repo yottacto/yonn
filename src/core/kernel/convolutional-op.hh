@@ -3,7 +3,7 @@
 #include "core/backend.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/parameter/conv-parameter.hh"
-#include "core/kernel/convolutional_op_internal.hh"
+#include "core/kernel/convolutional-op-internal.hh"
 
 namespace yonn
 {

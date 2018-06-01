@@ -28,6 +28,19 @@ struct convolutional_layer : layer
         core::backend backend
     );
 
+    convolutional_layer(
+        size_t in_width,
+        size_t in_height,
+        size_t window_size,
+        size_t in_channels,
+        size_t out_channels,
+        padding pad_type,
+        bool has_bias,
+        size_t w_stride,
+        size_t h_stride,
+        core::backend backend
+    );
+
     void forward_propagation() override;
     void backward_propagation() override;
 
@@ -105,6 +118,30 @@ convolutional_layer::convolutional_layer(
     // TODO init different kernel
 }
 
+convolutional_layer::convolutional_layer(
+    size_t in_width,
+    size_t in_height,
+    size_t window_size,
+    size_t in_channels,
+    size_t out_channels,
+    padding pad_type = padding::valid,
+    bool has_bias = true,
+    size_t w_stride = 1,
+    size_t h_stride = 1,
+    core::backend backend = core::default_engine()
+) :
+    convolutional_layer(
+        in_width,    in_height,
+        window_size, window_size,
+        in_channels, out_channels,
+        core::connection_table(),
+        pad_type,
+        has_bias,
+        w_stride, h_stride,
+        backend
+    )
+{
+}
 
 void convolutional_layer::forward_propagation()
 {

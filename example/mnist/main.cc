@@ -1,9 +1,23 @@
 #include <iostream>
 #include "yonn.hh"
 
+#define O true
+#define X false
+static const bool tb[] = {
+    O, X, X, X, O, O, O, X, X, O, O, O, O, X, O, O,
+    O, O, X, X, X, O, O, O, X, X, O, O, O, O, X, O,
+    O, O, O, X, X, X, O, O, O, X, X, O, X, O, O, O,
+    X, O, O, O, X, X, O, O, O, O, X, X, O, X, O, O,
+    X, X, O, O, O, X, X, O, O, O, O, X, O, O, X, O,
+    X, X, X, O, O, O, X, X, O, O, O, O, X, O, O, O
+};
+#undef O
+#undef X
+
 int main()
 {
     using fc = yonn::fully_connected_layer;
+    using conv = yonn::convolutional_layer;
 
     yonn::tensor train_images, test_images;
     std::vector<yonn::label_t> train_labels, test_labels;
@@ -29,7 +43,8 @@ int main()
     );
 
     yonn::network<yonn::topo::sequential> net;
-    net << fc(100, 10, true);
+    net << conv(32, 32, 5, 1, 6, yonn::padding::valid, true, 1, 1)
+        << fc(4704, 10, true);
 
     yonn::optimizer::naive optimizer;
     net.train<yonn::loss_function::absolute>(
