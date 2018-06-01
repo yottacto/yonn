@@ -4,9 +4,8 @@
 #include "type.hh"
 #include "util.hh"
 #include "core/parameter/conv-parameter.hh"
-
 #include "core/framework/op-kernel.hh"
-#include "core/kernel/fully-connected-op.hh"
+#include "core/kernel/convolutional-op.hh"
 
 namespace yonn
 {
@@ -69,8 +68,8 @@ convolutional_layer::convolutional_layer(
     ),
     // FIXME op_kernel need context to constrct, in fact in order to
     // specify device and layer's params
-    forward_kernel(new core::kernel::fully_connected_op(params)),
-    backward_kernel(new core::kernel::fully_connected_grad_op(params))
+    forward_kernel(new core::kernel::convolutional_op(params)),
+    backward_kernel(new core::kernel::convolutional_grad_op(params))
 {
     in_shapes.emplace_back(
         in_length(in_width, window_width, pad_type),

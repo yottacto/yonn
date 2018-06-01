@@ -36,14 +36,22 @@ struct shape3d
     shape3d(size_type width, size_type height, size_type depth)
         : width{width}, height{height}, depth{depth} {}
 
-    auto area() const
+    auto area() const -> size_t
     {
         return width * height;
     }
 
-    auto size() const
+    auto size() const -> size_t
     {
-        return area() * depth; }
+        return area() * depth;
+    }
+
+    auto get_index(size_t x, size_t y, size_t z) const -> size_t
+    {
+        // TODO check x, y, z in range
+        return (z * height + y) * width + x;
+    }
+
     size_type width;
     size_type height;
     size_type depth;

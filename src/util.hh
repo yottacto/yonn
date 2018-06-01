@@ -85,6 +85,13 @@ auto dot(Iter1 it1, Iter2 it2, size_t n) -> value_type
     return res;
 }
 
+template <class T>
+void add(T const* src, size_t size, T* dst)
+{
+    for (size_t i{0}; i < size; i++)
+        dst[i] += src[i];
+}
+
 } // namespace compute
 
 } // namespace yonn
