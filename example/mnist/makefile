@@ -8,8 +8,8 @@ CC = clang++
 LD = clang++
 
 # debug flags -D DEBUGGING_ENABLED -g
-CCFLAGS = -fno-operator-names -march=native -std=c++14 -Wall -Wextra -I../../src/ -O3
-LDFLAGS = 
+CCFLAGS = -fno-operator-names -march=native -std=c++14 -Wall -Wextra -I../../src/ -g -O0
+LDFLAGS = -g
 OBJECTS = $(BUILD)/main.o
 BUILD = build
 BIN = $(BUILD)/build

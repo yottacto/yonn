@@ -33,6 +33,8 @@ struct fully_connected_layer : layer
         input[1] = std::make_shared<edge>();
         input[2] = std::make_shared<edge>();
 
+        output[0] = std::make_shared<edge>();
+
         // TODO init different kernel
     }
 
