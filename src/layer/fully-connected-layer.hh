@@ -21,11 +21,11 @@ struct fully_connected_layer : layer
         forward_kernel(new core::kernel::fully_connected_op(params)),
         backward_kernel(new core::kernel::fully_connected_grad_op(params))
     {
-        in_shapes.emplace_back(1,       in_dims,  1);
-        in_shapes.emplace_back(in_dims, out_dims, 1);
-        in_shapes.emplace_back(1,       out_dims, 1);
+        in_shapes.emplace_back(in_dims,  1,       1);
+        in_shapes.emplace_back(out_dims, in_dims, 1);
+        in_shapes.emplace_back(out_dims, 1,       1);
 
-        out_shapes.emplace_back(1, out_dims, 1);
+        out_shapes.emplace_back(out_dims, 1, 1);
 
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
