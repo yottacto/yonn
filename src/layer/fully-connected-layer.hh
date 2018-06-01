@@ -29,12 +29,9 @@ struct fully_connected_layer : layer
 
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
-        input[0] = std::make_shared<edge>(input_shape(0));
-        input[1] = std::make_shared<edge>(input_shape(1));
-        input[2] = std::make_shared<edge>(input_shape(2));
-
-        // TODO allocate output
-        // output[0] =
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>();
+        input[2] = std::make_shared<edge>();
 
         // TODO init different kernel
     }

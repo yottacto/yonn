@@ -28,9 +28,17 @@ protected:
 
 struct edge
 {
+    edge() = default;
+
     //  FIXME tensor has outer vector wrapper
     edge(shape3d_t shape) : data(shape.size()), grad(shape.size())
     {
+    }
+
+    void allocate_nsamples(size_t batch_size, shape3d_t shape)
+    {
+        data.resize(batch_size, vec_t(shape.size()));
+        grad.resize(batch_size, vec_t(shape.size()));
     }
 
     auto get_data() -> tensor* { return &data; }

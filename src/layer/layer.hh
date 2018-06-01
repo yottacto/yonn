@@ -27,83 +27,28 @@ struct layer : node
     virtual void forward_propagation()  = 0;
     virtual void backward_propagation() = 0;
 
-    void allocate_output()
-    {
-        output[0] = std::make_shared<edge>(output_shape(0));
-    }
-
-    void allocate_input(shape3d_t const& shape)
-    {
-        if (!out_shapes.empty())
-            return;
-        in_shapes.emplace_back(shape);
-        out_shapes.emplace_back(shape);
-        input.resize(1);
-        output.resize(1);
-        input[0] = std::make_shared<edge>(shape);
-    }
+    void allocate_nsamples(size_t batch_size);
+    void allocate_output();
+    void allocate_input(shape3d_t const& shape);
 
     auto engine() const -> core::backend { return backend; }
 
     void forward() { forward_propagation(); }
     void backward() { backward_propagation(); }
 
-    void set_input_data(tensor const& input)
-    {
-        // TODO assume all needed memory allocated and for opencl need to
-        // deal with seperately
-        this->input[0]->data = input;
-    }
-
-    void set_output_grad(tensor const& grad)
-    {
-        // TODO assume all needed memory allocated and for opencl need to
-        // deal with seperately
-        output[0]->grad = grad;
-    }
-
-    void output_data(tensor& out)
-    {
-        out = output[0]->data;
-    }
-
-    auto get_input_data(size_t i) -> vec_t&
-    {
-        return input[i]->data[0];
-    }
+    void set_input_data(tensor const& input);
+    void set_output_grad(tensor const& grad);
+    void output_data(tensor& out);
+    auto get_input_data(size_t i) -> vec_t&;
 
     // TODO init weight
 
-    void update_weight(optimizer::optimizer* opt)
-    {
-        // TODO mark trainable for data, here the input[0] is not trainable
-        for (size_t i{1}; i < in_types.size(); i++) {
-            input[i]->merge_grads();
-            auto& weight = get_input_data(i);
-            opt->update(input[i]->grad[0], weight);
-        }
-    }
+    void update_weight(optimizer::optimizer* opt);
 
-    auto input_shapes() -> std::vector<shape3d_t>
-    {
-        return in_shapes;
-    }
-
-    auto input_shape(size_t i) -> shape3d_t
-    {
-        return in_shapes[i];
-    }
-
-    auto output_shapes() -> std::vector<shape3d_t>
-    {
-        return out_shapes;
-    }
-
-    auto output_shape(size_t i) -> shape3d_t
-    {
-        return out_shapes[i];
-    }
-
+    auto input_shapes()         -> std::vector<shape3d_t> { return in_shapes;     }
+    auto input_shape(size_t i)  -> shape3d_t              { return in_shapes[i];  }
+    auto output_shapes()        -> std::vector<shape3d_t> { return out_shapes;    }
+    auto output_shape(size_t i) -> shape3d_t              { return out_shapes[i]; }
 
 protected:
     std::vector<data_type> in_types;
@@ -134,6 +79,66 @@ inline void connect(
     prev->output[out_index] = next->input[in_index];
     next->input[in_index]->prev = prev;
     next->input[in_index]->next = next;
+}
+
+// implentation of layer
+void layer::allocate_nsamples(size_t batch_size)
+{
+    for (size_t i{0}; i < in_channels; i++)
+        input[i]->allocate_nsamples(batch_size, input_shape(i));
+
+    for (size_t i{0}; i < out_channels; i++)
+        output[i]->allocate_nsamples(batch_size, output_shape(i));
+}
+
+void layer::allocate_output()
+{
+    // FIXME
+    output[0] = std::make_shared<edge>();
+}
+
+void layer::allocate_input(shape3d_t const& shape)
+{
+    if (!in_shapes.empty())
+        return;
+    // for activation layer
+    in_shapes.emplace_back(shape);
+    out_shapes.emplace_back(shape);
+    input[0] = std::make_shared<edge>();
+}
+
+void layer::set_input_data(tensor const& input)
+{
+    // TODO assume all needed memory allocated and for opencl need to
+    // deal with seperately
+    this->input[0]->data = input;
+}
+
+void layer::set_output_grad(tensor const& grad)
+{
+    // TODO assume all needed memory allocated and for opencl need to
+    // deal with seperately
+    output[0]->grad = grad;
+}
+
+void layer::output_data(tensor& out)
+{
+    out = output[0]->data;
+}
+
+auto layer::get_input_data(size_t i) -> vec_t&
+{
+    return input[i]->data[0];
+}
+
+void layer::update_weight(optimizer::optimizer* opt)
+{
+    // TODO mark trainable for data, here the input[0] is not trainable
+    for (size_t i{1}; i < in_types.size(); i++) {
+        input[i]->merge_grads();
+        auto& weight = get_input_data(i);
+        opt->update(input[i]->grad[0], weight);
+    }
 }
 
 } // namespace yonn

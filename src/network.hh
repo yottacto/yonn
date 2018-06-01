@@ -15,6 +15,11 @@ struct network
 {
     using network_type = Net;
 
+    void allocate_nsamples(size_t batch_size)
+    {
+        net.allocate_nsamples(batch_size);
+    }
+
     template <class Layer>
     void add(Layer&& l)
     {
@@ -105,6 +110,8 @@ auto network<Net>::train(
 
     in_batch.resize(batch_size);
     desired_out_batch.resize(batch_size);
+
+    allocate_nsamples(batch_size);
 
     for (auto round = 0; round < epoch; round++) {
         for (size_t i{0}; i < inputs.size(); i += batch_size) {

@@ -20,10 +20,17 @@ struct sequential : nodes<sequential>
         }
     }
 
+    void allocate_nsamples(size_t batch_size);
     auto forward(tensor const& first) -> tensor;
     void backward(tensor const& first);
     void update_weight(optimizer::optimizer* opt);
 };
+
+void sequential::allocate_nsamples(size_t batch_size)
+{
+    for (auto const& l : all_nodes)
+        l->allocate_nsamples(batch_size);
+}
 
 auto sequential::forward(tensor const& first) -> tensor
 {
