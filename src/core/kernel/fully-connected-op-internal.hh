@@ -45,7 +45,7 @@ inline void fully_connected_op_internal(
     vec_t const& w,
     tensor& dw,
     tensor& db,
-    tensor& dout,
+    tensor const& dout,
     tensor& dx,
     fully_parameter const& params
 )

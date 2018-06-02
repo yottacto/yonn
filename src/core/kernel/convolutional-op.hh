@@ -39,7 +39,8 @@ struct convolutional_op : framework::op_kernel
         }
     }
 
-private:
+// TODO uncomment
+// private:
     conv_parameter params;
 };
 
@@ -72,7 +73,8 @@ struct convolutional_grad_op : framework::op_kernel
         }
     }
 
-private:
+// TODO uncomment
+// private:
     conv_parameter params;
 };
 

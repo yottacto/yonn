@@ -80,7 +80,7 @@ inline void convolutional_op_internal(
     vec_t const& w,
     tensor& dw,
     tensor& db,
-    tensor& dout,
+    tensor const& dout,
     tensor& dx,
     conv_parameter const& params
 )
