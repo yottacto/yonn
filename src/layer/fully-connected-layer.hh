@@ -31,13 +31,28 @@ struct fully_connected_layer : layer
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
         input[0] = std::make_shared<edge>();
-        input[1] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1));
         if (has_bias)
-            input[2] = std::make_shared<edge>();
+            input[2] = std::make_shared<edge>((input_shape(2)));
 
         output[0] = std::make_shared<edge>();
 
         // TODO init different kernel
+
+        // TODO init weight
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
+    }
+
+    auto fan_in_size() const -> size_t override
+    {
+        return params.in_size;
+    }
+
+    auto fan_out_size() const -> size_t override
+    {
+        return params.out_size;
     }
 
     void forward_propagation() override;

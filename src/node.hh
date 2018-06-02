@@ -31,7 +31,7 @@ struct edge
     edge() = default;
 
     //  FIXME tensor has outer vector wrapper
-    edge(shape3d_t shape) : data(shape.size()), grad(shape.size())
+    edge(shape3d_t shape) : data(1, vec_t(shape.size())), grad(1, vec_t(shape.size()))
     {
     }
 

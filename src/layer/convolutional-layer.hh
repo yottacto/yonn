@@ -41,6 +41,17 @@ struct convolutional_layer : layer
         core::backend backend
     );
 
+    auto fan_in_size() -> size_t const override
+    {
+        return params.width * params.height * params.depth;
+    }
+
+    auto fan_out_size() -> size_t const override
+    {
+        return (params.weight.width/params.w_stride)
+            * (params.weight.height/params.h_stride) * params.out.depth;
+    }
+
     void forward_propagation() override;
     void backward_propagation() override;
 
@@ -110,12 +121,17 @@ convolutional_layer::convolutional_layer(
     // invariant, all input channels allocated in constructor
     // TODO reasoning about this input_shape
     input[0] = std::make_shared<edge>();
-    input[1] = std::make_shared<edge>();
-    input[2] = std::make_shared<edge>();
+    input[1] = std::make_shared<edge>(input_shape(1));
+    input[2] = std::make_shared<edge>(input_shape(2));
 
     output[0] = std::make_shared<edge>();
 
     // TODO init different kernel
+
+    // TODO init weight
+    for (size_t i{0}; i < in_types.size(); i++)
+        if (in_types[i] == data_type::weight)
+            init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
 }
 
 convolutional_layer::convolutional_layer(

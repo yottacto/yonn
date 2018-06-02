@@ -24,6 +24,9 @@ struct layer : node
 
     virtual ~layer() = default;
 
+    virtual auto fan_in_size()  const -> size_t = 0;
+    virtual auto fan_out_size() const -> size_t = 0;
+
     virtual void forward_propagation()  = 0;
     virtual void backward_propagation() = 0;
 

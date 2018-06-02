@@ -2,6 +2,8 @@
 #include <iterator>
 #include <algorithm>
 #include <vector>
+#include <cmath>
+#include <random>
 #include "type.hh"
 
 namespace yonn
@@ -70,6 +72,17 @@ inline auto out_length(
 
     // TODO the result must be integer
     return (out_length + stride - 1) / stride;
+}
+
+// TODO init_weight
+inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
+{
+    value_type weight_base = std::sqrt(6. / (fan_in + fan_out));
+
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    std::uniform_int_distribution<> dis(-weight_base, weight_base);
+    std::generate(std::begin(a), std::end(a), [&]() { return dis(gen); });
 }
 
 namespace compute
