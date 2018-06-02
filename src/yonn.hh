@@ -2,6 +2,7 @@
 #include "network.hh"
 #include "tensor.hh"
 #include "util.hh"
+#include "type.hh"
 
 #include "loss-function/loss-function.hh"
 
