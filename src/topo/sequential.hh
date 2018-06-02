@@ -1,4 +1,8 @@
 #pragma once
+
+// TODO remove this
+#include <iostream>
+
 #include <vector>
 #include "nodes.hh"
 #include "tensor.hh"
@@ -24,6 +28,20 @@ struct sequential : nodes<sequential>
     auto forward(tensor const& first) -> tensor;
     void backward(tensor const& first);
     void update_weight(optimizer::optimizer* opt);
+
+    // debug info
+    // TODO pass outstream
+    void print_out_shapes() const
+    {
+        for (auto const& l : all_nodes) {
+            auto out_shape = l->output_shape(0);
+            std::cerr << "(" << out_shape.width
+                << ", " << out_shape.height
+                << ", " << out_shape.depth << ")\n";
+            std::cerr << l->output[0]->data.size() << "\n";
+            std::cerr << l->output[0]->data[0].size() << "\n";
+        }
+    }
 };
 
 void sequential::allocate_nsamples(size_t batch_size)

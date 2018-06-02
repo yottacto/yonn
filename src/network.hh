@@ -1,7 +1,4 @@
 #pragma once
-// TODO remove this
-#include <iostream>
-
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -99,6 +96,11 @@ struct network
         return res;
     }
 
+    void print_out_shapes() const
+    {
+        net.print_out_shapes();
+    }
+
 // TODO uncomment
 // private:
     network_type net;
@@ -142,10 +144,7 @@ auto network<Net>::train(
     allocate_nsamples(batch_size);
 
     for (auto round = 0; round < epoch; round++) {
-        std::cerr << "epoch: " << round << "\n";
-        auto tmp = 0;
         for (size_t i{0}; i < inputs.size(); i += batch_size) {
-        // std::cerr << "\titer: " << tmp++ << ":\n";
             train_once<Error>(
                 optimizer,
                 std::next(std::begin(inputs), i),

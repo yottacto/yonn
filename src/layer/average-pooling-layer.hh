@@ -38,9 +38,9 @@ struct average_pooling_layer : layer
 
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
-        input[0] = std::make_shared<edge>(input_shape(1));
+        input[0] = std::make_shared<edge>(input_shape(0));
 
-        output[0] = std::make_shared<edge>(output_shape(1));
+        output[0] = std::make_shared<edge>(output_shape(0));
 
         // TODO init different kernel
     }
