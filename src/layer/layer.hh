@@ -78,9 +78,11 @@ inline void connect(
     // TODO assert prev->output_shape(head_index) == next->input_shape(tail_index)
     // TODO assume each layer all input channels already alloced
     // next->input[0] = std::make_shared<edge>(next->input_shape(tail_index));
-    prev->allocate_output();
+    // prev->allocate_output();
     next->allocate_input(prev->output_shape(0));
-    prev->output[out_index] = next->input[in_index];
+    next->allocate_output();
+    next->input[in_index] = prev->output[out_index];
+    // prev->output[out_index] = next->input[in_index];
     next->input[in_index]->prev = prev;
     next->input[in_index]->next = next;
 }
@@ -95,7 +97,8 @@ void layer::allocate_nsamples(size_t batch_size)
 void layer::allocate_output()
 {
     // FIXME
-    output[0] = std::make_shared<edge>();
+    if (!output[0])
+        output[0] = std::make_shared<edge>();
 }
 
 void layer::allocate_input(shape3d_t const& shape)
