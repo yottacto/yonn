@@ -1,6 +1,7 @@
 #pragma once
 #include "type.hh"
 #include "absolute.hh"
+#include "mse.hh"
 
 namespace yonn
 {
