@@ -41,12 +41,12 @@ struct convolutional_layer : layer
         core::backend backend
     );
 
-    auto fan_in_size() -> size_t const override
+    auto fan_in_size() const -> size_t override
     {
-        return params.width * params.height * params.depth;
+        return params.weight.width * params.weight.height * params.weight.depth;
     }
 
-    auto fan_out_size() -> size_t const override
+    auto fan_out_size() const -> size_t override
     {
         return (params.weight.width/params.w_stride)
             * (params.weight.height/params.h_stride) * params.out.depth;
