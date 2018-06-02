@@ -45,6 +45,45 @@ struct average_pooling_layer : layer
         // TODO init different kernel
     }
 
+    average_pooling_layer(
+        size_t width,
+        size_t height,
+        size_t in_channels,
+        size_t pool_size
+    ) : average_pooling_layer(
+        width,
+        height,
+        in_channels,
+        pool_size,
+        pool_size,
+        height == 1 ? 1 : pool_size
+    ) {}
+
+    average_pooling_layer(
+        size_t width,
+        size_t height,
+        size_t in_channels,
+        size_t pool_size,
+        size_t stride
+    ) : average_pooling_layer(
+        width,
+        height,
+        in_channels,
+        pool_size,
+        pool_size,
+        stride
+    ) {}
+
+    auto fan_in_size() const -> size_t override
+    {
+        return params.pool_width * params.pool_height * params.in.depth;
+    }
+
+    auto fan_out_size() const -> size_t override
+    {
+        return params.out.size();
+    }
+
     void forward_propagation() override;
     void backward_propagation() override;
 

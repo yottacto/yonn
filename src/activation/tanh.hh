@@ -13,6 +13,16 @@ struct tanh : layer
     tanh() : layer({data_type::data}, {data_type::data}) {}
     // TODO explicit specify the dims
 
+    auto fan_in_size() const -> size_t override
+    {
+        return input_shape(0).size();
+    }
+
+    auto fan_out_size() const -> size_t override
+    {
+        return output_shape(0).size();
+    }
+
     void forward_propagation() override;
     void backward_propagation() override;
 
@@ -24,21 +34,21 @@ void tanh::forward_propagation()
 {
     // TODO init once
     // TODO const in data?
-    tensor* in_data  = input[0] ->get_data();
-    tensor* out_data = output[0]->get_data();
+    tensor const& in_data  = *(input[0] ->get_data());
+    tensor&       out_data = *(output[0]->get_data());
 
-    for (size_t sample{0}; sample < in_data->size(); sample++)
+    for (size_t sample{0}; sample < in_data.size(); sample++)
         forward_activation(in_data[sample], out_data[sample]);
 }
 
 void tanh::backward_propagation()
 {
-    tensor* in_data  = input[0] ->get_data();
-    tensor* in_grad  = input[0] ->get_grad();
-    tensor* out_data = output[0]->get_data();
-    tensor* out_grad = output[0]->get_grad();
+    tensor const& in_data  = *(input[0] ->get_data());
+    tensor&       in_grad  = *(input[0] ->get_grad());
+    tensor const& out_data = *(output[0]->get_data());
+    tensor const& out_grad = *(output[0]->get_grad());
 
-    for (size_t sample{0}; sample < in_data->size(); sample++)
+    for (size_t sample{0}; sample < in_data.size(); sample++)
         backward_activation(
             in_data[sample],  in_grad[sample],
             out_data[sample], out_grad[sample]

@@ -4,13 +4,16 @@
 #include "util.hh"
 #include "type.hh"
 
-#include "loss-function/loss-function.hh"
-
 // TODO header file include all layers
 #include "layer/fully-connected-layer.hh"
 #include "layer/convolutional-layer.hh"
+#include "layer/average-pooling-layer.hh"
+
+#include "loss-function/loss-function.hh"
 
 #include "optimizer/optimizer.hh"
 
 #include "io/mnist-parser.hh"
+
+#include "activation/tanh.hh"
 

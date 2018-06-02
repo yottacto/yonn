@@ -41,6 +41,20 @@ struct convolutional_layer : layer
         core::backend backend
     );
 
+    convolutional_layer(
+        size_t in_width,
+        size_t in_height,
+        size_t window_size,
+        size_t in_channels,
+        size_t out_channels,
+        core::connection_table const& table,
+        padding pad_type,       // = padding::valid,
+        bool has_bias,          // = true,
+        size_t w_stride,        // = 1,
+        size_t h_stride,        // = 1,
+        core::backend backend   // = core::default_engine()
+    );
+
     auto fan_in_size() const -> size_t override
     {
         return params.weight.width * params.weight.height * params.weight.depth;
@@ -55,7 +69,6 @@ struct convolutional_layer : layer
     void forward_propagation() override;
     void backward_propagation() override;
 
-// TODO uncomment
 // private:
     core::conv_parameter params;
     core::framework::op_kernel_context forward_context;
@@ -152,6 +165,32 @@ convolutional_layer::convolutional_layer(
         window_size, window_size,
         in_channels, out_channels,
         core::connection_table(),
+        pad_type,
+        has_bias,
+        w_stride, h_stride,
+        backend
+    )
+{
+}
+
+convolutional_layer::convolutional_layer(
+    size_t in_width,
+    size_t in_height,
+    size_t window_size,
+    size_t in_channels,
+    size_t out_channels,
+    core::connection_table const& table,
+    padding pad_type = padding::valid,
+    bool has_bias = true,
+    size_t w_stride = 1,
+    size_t h_stride = 1,
+    core::backend backend = core::default_engine()
+) :
+    convolutional_layer(
+        in_width,    in_height,
+        window_size, window_size,
+        in_channels, out_channels,
+        table,
         pad_type,
         has_bias,
         w_stride, h_stride,

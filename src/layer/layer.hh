@@ -48,10 +48,10 @@ struct layer : node
 
     void update_weight(optimizer::optimizer* opt);
 
-    auto input_shapes()         -> std::vector<shape3d_t> { return in_shapes;     }
-    auto input_shape(size_t i)  -> shape3d_t              { return in_shapes[i];  }
-    auto output_shapes()        -> std::vector<shape3d_t> { return out_shapes;    }
-    auto output_shape(size_t i) -> shape3d_t              { return out_shapes[i]; }
+    auto input_shapes()         const -> std::vector<shape3d_t> { return in_shapes;     }
+    auto input_shape(size_t i)  const -> shape3d_t              { return in_shapes[i];  }
+    auto output_shapes()        const -> std::vector<shape3d_t> { return out_shapes;    }
+    auto output_shape(size_t i) const -> shape3d_t              { return out_shapes[i]; }
 
 // TODO uncomment
 // protected:
