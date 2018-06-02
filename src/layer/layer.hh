@@ -84,11 +84,8 @@ inline void connect(
 // implentation of layer
 void layer::allocate_nsamples(size_t batch_size)
 {
-    for (size_t i{0}; i < in_channels; i++)
-        input[i]->allocate_nsamples(batch_size, input_shape(i));
-
-    for (size_t i{0}; i < out_channels; i++)
-        output[i]->allocate_nsamples(batch_size, output_shape(i));
+    input[0]->allocate_nsamples(batch_size, input_shape(0));
+    output[0]->allocate_nsamples(batch_size, output_shape(0));
 }
 
 void layer::allocate_output()

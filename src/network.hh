@@ -144,7 +144,7 @@ auto network<Net>::train(
         std::cerr << "epoch: " << round << "\n";
         auto tmp = 0;
         for (size_t i{0}; i < inputs.size(); i += batch_size) {
-        std::cerr << "\titer: " << tmp++ << ":\n";
+        // std::cerr << "\titer: " << tmp++ << ":\n";
             train_once<Error>(
                 optimizer,
                 std::next(std::begin(inputs), i),
