@@ -28,13 +28,15 @@ struct network
     }
 
     // TODO callback function on each epoch and minibatch
-    template <class Error, class Optimizer>
+    template <class Error, class Optimizer, class EachBatch, class EachEpoch>
     auto train(
         Optimizer& optimizer,
         tensor const& inputs,
         std::vector<label_t> const& desired_outputs,
         size_t batch_sze,
-        int epoch
+        int epoch,
+        EachBatch each_batch,
+        EachEpoch each_epoch
     ) -> bool;
 
     // TODO currently, output label was tansformed to tensor type
@@ -117,22 +119,21 @@ auto& operator<<(network<topo::sequential>& net, Layer&& l)
 
 
 // implementation of network<Net>
-// TODO callback function on each epoch and minibatch
 template <class Net>
 template <
     class Error,
-    class Optimizer
-    // class EachBatch,
-    // class EachEpoch
+    class Optimizer,
+    class EachBatch,
+    class EachEpoch
 >
 auto network<Net>::train(
     Optimizer& optimizer,
     tensor const& inputs,
     std::vector<label_t> const& desired_outputs,
     size_t batch_size,
-    int epoch
-    // EachBatch each_batch,
-    // EachEpoch each_epoch
+    int epoch,
+    EachBatch each_batch,
+    EachEpoch each_epoch
 ) -> bool
 {
     // TODO network phase
@@ -151,7 +152,9 @@ auto network<Net>::train(
                 std::next(std::begin(desired_outputs), i),
                 std::min<size_t>(batch_size, inputs.size() - i)
             );
+            each_batch();
         }
+        each_epoch();
     }
 
     return true;

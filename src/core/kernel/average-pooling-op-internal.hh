@@ -1,4 +1,5 @@
 #pragma once
+#include <iterator>
 #include <algorithm>
 #include "tensor.hh"
 #include "util.hh"
@@ -58,6 +59,7 @@ inline void average_pooling_op_internal(
     for (size_t sample{0}; sample < in_data.size(); sample++) {
         auto const& dout_sample = dout[sample];
         auto& dx_sample = dx[sample];
+        std::fill(std::begin(dx_sample), std::end(dx_sample), 0);
         for (size_t od{0}; od < params.out.depth; od++)
         for (size_t ox{0}; ox < params.out.width; ox++)
         for (size_t oy{0}; oy < params.out.height; oy++) {

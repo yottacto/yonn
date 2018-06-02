@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <iterator>
 #include <numeric>
 #include "tensor.hh"
 #include "util.hh"
@@ -62,7 +64,7 @@ inline void convolutional_op_internal(
                             pw_element  += w_w;
                             pin_element += in_w;
                         }
-                        pout[x]  += sum;
+                        pout[x] = sum;
                         pin_line += w_s;
                     }
                     pout += out_w;
@@ -88,6 +90,10 @@ inline void convolutional_op_internal(
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
+
+        std::fill(std::begin(dw[sample]), std::end(dw[sample]), 0);
+        std::fill(std::begin(db[sample]), std::end(db[sample]), 0);
+        std::fill(std::begin(dx[sample]), std::end(dx[sample]), 0);
 
         for (size_t i{0}; i < params.in.depth; i++)
         for (size_t j = 0; j < params.out.depth; j++) {
