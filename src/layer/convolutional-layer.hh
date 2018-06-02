@@ -55,7 +55,8 @@ struct convolutional_layer : layer
     void forward_propagation() override;
     void backward_propagation() override;
 
-private:
+// TODO uncomment
+// private:
     core::conv_parameter params;
     core::framework::op_kernel_context forward_context;
     core::framework::op_kernel_context backward_context;

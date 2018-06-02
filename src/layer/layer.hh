@@ -53,7 +53,8 @@ struct layer : node
     auto output_shapes()        -> std::vector<shape3d_t> { return out_shapes;    }
     auto output_shape(size_t i) -> shape3d_t              { return out_shapes[i]; }
 
-protected:
+// TODO uncomment
+// protected:
     std::vector<data_type> in_types;
     std::vector<data_type> out_types;
     // FIXME cosntruct these two first
