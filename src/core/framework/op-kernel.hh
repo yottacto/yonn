@@ -50,6 +50,7 @@ struct op_kernel_context
     auto output_grad(size_t index)       -> tensor&       { return *(*out_grad)[index]; }
     auto output_grad(size_t index) const -> tensor const& { return *(*out_grad)[index]; }
 
+// TODO uncomment
 // private:
     core::backend backend;
     std::vector<tensor*>* in_data;
@@ -66,7 +67,8 @@ struct op_kernel
 
     virtual void compute(op_kernel_context& context) = 0;
 
-protected:
+// TODO uncomment
+// protected:
 };
 
 } // namespace framework

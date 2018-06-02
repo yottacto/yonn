@@ -33,7 +33,8 @@ struct nodes
             l->update_wegith(opt);
     }
 
-protected:
+// TODO uncomment
+// protected:
 
     template <class Layer>
     void emplace_back_impl(Layer&& l, std::true_type)

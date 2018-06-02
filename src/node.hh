@@ -21,7 +21,8 @@ struct node
         size_t out_index, size_t in_index
     );
 
-protected:
+// TODO uncomment
+// protected:
     std::vector<std::shared_ptr<edge>> input;
     std::vector<std::shared_ptr<edge>> output;
 };

@@ -99,7 +99,8 @@ struct network
         return res;
     }
 
-private:
+// TODO uncomment
+// private:
     network_type net;
     tensor in_batch;
     std::vector<label_t> desired_out_batch;
