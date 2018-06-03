@@ -121,8 +121,8 @@ convolutional_layer::convolutional_layer(
     );
     if (has_bias)
         in_shapes.emplace_back(
-            out_length(in_width, window_width, w_stride, pad_type),
-            out_length(in_height, window_height, h_stride, pad_type),
+            1,
+            1,
             out_channels
         );
 
