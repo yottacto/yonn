@@ -89,10 +89,10 @@ inline void convolutional_op_internal(
 {
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
 
-        std::fill(std::begin(dw[sample]), std::end(dw[sample]), 0);
-        std::fill(std::begin(db[sample]), std::end(db[sample]), 0);
+    std::fill(std::begin(dw[0]), std::end(dw[0]), 0);
+    std::fill(std::begin(db[0]), std::end(db[0]), 0);
+    for (size_t sample{0}; sample < in_data.size(); sample++) {
         std::fill(std::begin(dx[sample]), std::end(dx[sample]), 0);
 
         for (size_t i{0}; i < params.in.depth; i++)
@@ -169,7 +169,7 @@ inline void convolutional_op_internal(
                 }
 
                 idx = params.in.depth * j + i;
-                dw[sample][params.weight.get_index(xi, yi, idx)] += dst;
+                dw[0][params.weight.get_index(xi, yi, idx)] += dst;
             }
         }
 
@@ -179,7 +179,7 @@ inline void convolutional_op_internal(
                 auto idx = params.out.get_index(0, 0, j);
                 auto const* delta  = &dout[sample][idx];
                 auto const* deltaa = delta + params.out.width * params.out.height;
-                db[sample][j] += std::accumulate(delta, deltaa, value_type{0});
+                db[0][j] += std::accumulate(delta, deltaa, value_type{0});
             }
         }
     }

@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <iterator>
 #include "tensor.hh"
 #include "util/util.hh"
 #include "core/parameter/fully-parameter.hh"
@@ -53,6 +55,8 @@ inline void fully_connected_op_internal(
     auto const& in_size = params.in_size;
     auto const& out_size = params.out_size;
     auto const& has_bias = params.has_bias;
+    std::fill(std::begin(dw[0]), std::end(dw[0]), 0);
+    std::fill(std::begin(db[0]), std::end(db[0]), 0);
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
@@ -69,12 +73,12 @@ inline void fully_connected_op_internal(
         // derivatives for w, here dw
         for (size_t i{0}; i < in_size; i++)
             for (size_t j{0}; j < out_size; j++)
-                dw[sample][i * out_size + j] = in_data[sample][i] * dout[sample][j];
+                dw[0][i * out_size + j] += in_data[sample][i] * dout[sample][j];
 
         // derivatives for bias, here db
         if (has_bias)
             for (size_t i{0}; i < out_size; i++)
-                db[sample][i] = dout[sample][i];
+                db[0][i] += dout[sample][i];
     }
 }
 
