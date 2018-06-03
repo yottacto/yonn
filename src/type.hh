@@ -1,5 +1,9 @@
 #pragma once
+#include <iomanip>
+#include <algorithm>
 #include <vector>
+#include <set>
+#include <map>
 #include <unordered_map>
 
 namespace yonn
@@ -74,9 +78,41 @@ struct result
             success++;
     }
 
+    template <class OStream>
+    void print_detail(OStream& os) const
+    {
+        auto all = labels();
+        os << std::setw(6) << '*';
+        for (auto i : all)
+            os << std::setw(6) << i;
+        os << "\n";
+
+        for (auto i : all) {
+            os << std::setw(6) << i;
+            for (auto const& j : all) {
+                size_t count{0};
+                if (confusion_matrix.count(i) && confusion_matrix.at(i).count(j))
+                    count = confusion_matrix.at(i).at(j);
+                os << std::setw(6) << count;
+            }
+            os << "\n";
+        }
+    }
+
+    auto labels() const -> std::set<label_t>
+    {
+        std::set<label_t> all;
+        for (auto const& i : confusion_matrix) {
+            all.insert(i.first);
+            for (auto const& j : i.second)
+                all.insert(j.first);
+        }
+        return all;
+    }
+
     size_t success{0};
     size_t total{0};
-    std::unordered_map<
+    std::map<
         label_t,
         std::unordered_map<label_t, size_t>
     > confusion_matrix;
