@@ -1,8 +1,4 @@
 #pragma once
-
-#include <iostream>
-#include <iomanip>
-
 #include <vector>
 #include <cmath>
 #include "tensor.hh"
@@ -10,21 +6,6 @@
 
 namespace yonn
 {
-
-// TODO remove this
-inline void print(tensor const& t)
-{
-    std::cout << "----\n";
-    for (auto v : t) {
-        for (auto i : v)
-            std::cout << std::fixed << std::setprecision(12)
-                << i << " ";
-        std::cout << "\n";
-    }
-    std::cout << "----\n";
-    std::cout << "\n";
-}
-
 
 inline auto sum(tensor const& t) -> value_type
 {
@@ -93,7 +74,7 @@ inline auto gradient_check(
         v = old;
     }
 
-    auto error = relative_error(std_grad[2], numeric_grad[2]);
+    auto error = relative_error(std_grad[0], numeric_grad[0]);
     for (auto i = 1u; i < std_grad.size(); i++)
         error = std::max(error, relative_error(std_grad[i], numeric_grad[i]));
     return error;
