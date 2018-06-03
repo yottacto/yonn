@@ -82,7 +82,7 @@ inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
 
     std::random_device rd{};
     std::mt19937 gen{rd()};
-    std::uniform_int_distribution<> dis(-weight_base, weight_base);
+    std::uniform_real_distribution<> dis(-weight_base, weight_base);
     std::generate(std::begin(a), std::end(a), [&]() { return dis(gen); });
 }
 
