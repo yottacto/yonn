@@ -2,7 +2,7 @@
 #include <iterator>
 #include <algorithm>
 #include "tensor.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/parameter/avg-pool-parameter.hh"
 
 namespace yonn

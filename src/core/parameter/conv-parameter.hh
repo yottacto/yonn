@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "type.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/parameter/parameter.hh"
 
 namespace yonn

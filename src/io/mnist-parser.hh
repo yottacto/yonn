@@ -4,7 +4,7 @@
 #include <fstream>
 #include "type.hh"
 #include "tensor.hh"
-#include "util.hh"
+#include "util/util.hh"
 
 namespace yonn
 {

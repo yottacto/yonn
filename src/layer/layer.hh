@@ -39,10 +39,17 @@ struct layer : node
     void forward() { forward_propagation(); }
     void backward() { backward_propagation(); }
 
+    void set_input_data(std::vector<tensor> const& input);
     void set_input_data(tensor const& input);
     void set_output_grad(tensor const& grad);
     void output_data(tensor& out);
-    auto get_input_data(size_t i) -> vec_t&;
+    auto get_input_data(size_t i) -> tensor&;
+    auto get_input_grad() const -> std::vector<tensor>;
+
+    auto get_output_data() const -> tensor;
+    auto get_output_grad() const -> tensor;
+
+    void reset_output_grad(value_type x);
 
     // TODO init weight
 
@@ -65,11 +72,11 @@ struct layer : node
     core::backend backend;
 };
 
-auto& operator<<(layer& lhs, layer& rhs)
-{
-    // TODO
-    return lhs;
-}
+// auto& operator<<(layer& lhs, layer& rhs)
+// {
+//     // TODO
+//     return lhs;
+// }
 
 inline void connect(
     std::shared_ptr<layer>& prev, std::shared_ptr<layer>& next,
@@ -111,6 +118,12 @@ void layer::allocate_input(shape3d_t const& shape)
     input[0] = std::make_shared<edge>();
 }
 
+void layer::set_input_data(std::vector<tensor> const& input)
+{
+    for (auto i = 0u; i < input.size(); i++)
+        this->input[i]->data = input[i];
+}
+
 void layer::set_input_data(tensor const& input)
 {
     // TODO assume all needed memory allocated and for opencl need to
@@ -130,9 +143,34 @@ void layer::output_data(tensor& out)
     out = output[0]->data;
 }
 
-auto layer::get_input_data(size_t i) -> vec_t&
+auto layer::get_input_data(size_t i) -> tensor&
 {
-    return input[i]->data[0];
+    return input[i]->data;
+}
+
+auto layer::get_input_grad() const -> std::vector<tensor>
+{
+    std::vector<tensor> grads(input.size());
+    for (auto i = 0u; i < grads.size(); i++)
+        grads[i] = input[i]->grad;
+    return grads;
+}
+
+auto layer::get_output_data() const -> tensor
+{
+    return output[0]->data;
+}
+
+auto layer::get_output_grad() const -> tensor
+{
+    return output[0]->grad;
+}
+
+void layer::reset_output_grad(value_type x)
+{
+    for (auto& v: output[0]->grad)
+        for (auto& i : v)
+            i = x;
 }
 
 void layer::update_weight(optimizer::optimizer* opt)
@@ -140,7 +178,7 @@ void layer::update_weight(optimizer::optimizer* opt)
     // TODO mark trainable for data, here the input[0] is not trainable
     for (size_t i{1}; i < in_types.size(); i++) {
         input[i]->merge_grads();
-        auto& weight = get_input_data(i);
+        auto& weight = get_input_data(i)[0];
         opt->update(input[i]->grad[0], weight);
     }
 }

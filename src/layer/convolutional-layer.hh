@@ -2,7 +2,7 @@
 #include <memory>
 #include "layer.hh"
 #include "type.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/parameter/conv-parameter.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/kernel/convolutional-op.hh"
@@ -111,7 +111,7 @@ convolutional_layer::convolutional_layer(
 {
     in_shapes.emplace_back(
         in_length(in_width, window_width, pad_type),
-        in_length(in_height,  window_height, pad_type),
+        in_length(in_height, window_height, pad_type),
         in_channels
     );
     in_shapes.emplace_back(
@@ -141,6 +141,10 @@ convolutional_layer::convolutional_layer(
     output[0] = std::make_shared<edge>();
 
     // TODO init different kernel
+    if (backend == core::backend::internal)
+        ;
+    else {
+    }
 
     // TODO init weight
     for (size_t i{0}; i < in_types.size(); i++)

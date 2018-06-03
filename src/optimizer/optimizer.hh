@@ -31,6 +31,8 @@ struct naive : optimizer
     value_type alpha;
 };
 
+// TODO stateful optimizer
+
 } // namespace optimizer
 } // namespace yonn
 

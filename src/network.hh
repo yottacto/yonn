@@ -6,7 +6,7 @@
 #include "layer/layer.hh"
 #include "loss-function/loss-function.hh"
 #include "topo/sequential.hh"
-#include "util.hh"
+#include "util/util.hh"
 
 namespace yonn
 {

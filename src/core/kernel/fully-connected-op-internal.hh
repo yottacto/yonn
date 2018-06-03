@@ -1,6 +1,6 @@
 #pragma once
 #include "tensor.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/parameter/fully-parameter.hh"
 
 namespace yonn
@@ -32,7 +32,7 @@ inline void fully_connected_op_internal(
                 out[i] += in[c] * w[c * out_size + i];
 
             // FIXME
-            // if (has_bias)
+            if (has_bias)
             {
                 out[i] += bias[i];
             }
@@ -72,8 +72,9 @@ inline void fully_connected_op_internal(
                 dw[sample][i * out_size + j] = in_data[sample][i] * dout[sample][j];
 
         // derivatives for bias, here db
-        for (size_t i{0}; i < out_size; i++)
-            db[sample][i] = dout[sample][i];
+        if (has_bias)
+            for (size_t i{0}; i < out_size; i++)
+                db[sample][i] = dout[sample][i];
     }
 }
 

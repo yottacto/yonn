@@ -2,7 +2,7 @@
 #include <memory>
 #include "layer.hh"
 #include "type.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/kernel/fully-connected-op.hh"
 #include "core/parameter/fully-parameter.hh"
@@ -24,7 +24,7 @@ struct fully_connected_layer : layer
         in_shapes.emplace_back(in_dims,  1,       1);
         in_shapes.emplace_back(out_dims, in_dims, 1);
         if (has_bias)
-            in_shapes.emplace_back(out_dims, 1,       1);
+            in_shapes.emplace_back(out_dims, 1, 1);
 
         out_shapes.emplace_back(out_dims, 1, 1);
 

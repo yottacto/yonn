@@ -3,7 +3,7 @@
 #include <iterator>
 #include <numeric>
 #include "tensor.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/parameter/conv-parameter.hh"
 
 namespace yonn

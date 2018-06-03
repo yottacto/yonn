@@ -2,7 +2,7 @@
 #include <memory>
 #include "layer.hh"
 #include "type.hh"
-#include "util.hh"
+#include "util/util.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/kernel/average-pooling-op.hh"
 #include "core/parameter/avg-pool-parameter.hh"

@@ -5,7 +5,7 @@
 namespace yonn
 {
 
-using value_type = float;
+using value_type = double;
 using vec_t = std::vector<value_type>;
 
 // TODO unsigned int or unsigned long
