@@ -71,7 +71,7 @@ struct network
 
     auto forward_prop_max_index(vec_t const& input) -> label_t
     {
-        return max_index(forward_propagation(input));
+        return max_index(forward_propagation(input)[0]);
     }
 
     template <class Error>
