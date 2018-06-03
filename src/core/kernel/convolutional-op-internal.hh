@@ -30,7 +30,7 @@ inline void convolutional_op_internal(
     auto w_w      = params.weight.width;
     auto w_h      = params.weight.height;
     auto w_s      = params.w_stride;
-    auto h_s      = params.h_stride;
+    auto line_s   = in_w * params.h_stride;
 
     // TODO parallelize
     for (size_t sample{0}; sample < in_data.size(); sample++) {
@@ -68,11 +68,11 @@ inline void convolutional_op_internal(
                         pin_line += w_s;
                     }
                     pout += out_w;
-                    pin += h_s;
+                    pin += line_s;
                 }
             }
             if (params.has_bias)
-                compute::add(bias.data() + i, out_area, pa);
+                compute::add(bias[i], out_area, pa);
         }
     }
 }
@@ -96,7 +96,7 @@ inline void convolutional_op_internal(
         std::fill(std::begin(dx[sample]), std::end(dx[sample]), 0);
 
         for (size_t i{0}; i < params.in.depth; i++)
-        for (size_t j = 0; j < params.out.depth; j++) {
+        for (size_t j{0}; j < params.out.depth; j++) {
             if (!params.tb.is_connected(j, i))
                 continue;
 

@@ -17,7 +17,8 @@ inline void print(tensor const& t)
     std::cout << "----\n";
     for (auto v : t) {
         for (auto i : v)
-            std::cout << std::fixed << std::setprecision(12) << i << " ";
+            std::cout << std::fixed << std::setprecision(12)
+                << i << " ";
         std::cout << "\n";
     }
     std::cout << "----\n";
@@ -34,23 +35,19 @@ inline auto sum(tensor const& t) -> value_type
     return s;
 }
 
-inline auto relative_error(
-    std::vector<tensor> const& std,
-    std::vector<tensor> const& num
-)
+inline auto relative_error(tensor const& std, tensor const& num)
 {
     value_type max_diff{0};
     value_type max{1e-8};
-    for (auto ti = 0u; ti < std.size(); ti++)
-    for (auto vi = 0u; vi < std[0].size(); vi++)
-    for (auto i  = 0u; i < std[0][0].size(); i++) {
+    for (auto vi = 0u; vi < std.size(); vi++)
+    for (auto i  = 0u; i < std[vi].size(); i++) {
         max_diff = std::max(
             max_diff,
-            std::abs(std[ti][vi][i] - num[ti][vi][i])
+            std::abs(std[vi][i] - num[vi][i])
         );
         max = std::max(
             max,
-            std::abs(std[ti][vi][i]) + std::abs(num[ti][vi][i])
+            std::abs(std[vi][i]) + std::abs(num[vi][i])
         );
     }
     return max_diff / max;
@@ -59,7 +56,7 @@ inline auto relative_error(
 template <class Layer>
 inline auto gradient_check(
     Layer& l, std::vector<tensor> in, tensor const& dout,
-    value_type h = 1e-2
+    value_type h = 1e-6
 )
 {
     l.set_input_data(in);
@@ -96,7 +93,10 @@ inline auto gradient_check(
         v = old;
     }
 
-    return relative_error(std_grad, numeric_grad);
+    auto error = relative_error(std_grad[2], numeric_grad[2]);
+    for (auto i = 1u; i < std_grad.size(); i++)
+        error = std::max(error, relative_error(std_grad[i], numeric_grad[i]));
+    return error;
     // return numeric_grad;
 }
 

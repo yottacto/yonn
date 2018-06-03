@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 #include "type.hh"
 
 namespace yonn
@@ -9,21 +10,32 @@ namespace loss_function
 // mean-squared-error loss function
 struct mse
 {
-    static auto f(const vec_t &y, const vec_t &t) -> value_type
+    static auto f(vec_t const& scores, label_t y) -> value_type
     {
-        value_type d{0.0};
-        for (size_t i{0}; i < y.size(); i++)
-            d += (y[i] - t[i]) * (y[i] - t[i]);
+        // FIXME value range in (min, max), this depends on the last layer's
+        // output value range, typically depends on activation functions.
+        // refactor this
+        std::pair<value_type, value_type> range(0, 1);
 
-        return d / static_cast<value_type>(y.size());
+        value_type d{0.0};
+        for (size_t i{0}; i < scores.size(); i++)
+            d += (scores[i] - (i == y ? range.second : range.first))
+                * (scores[i] - (i == y ? range.second : range.first));
+
+        return d / static_cast<value_type>(scores.size());
     }
 
-    static auto df(const vec_t &y, const vec_t &t) -> vec_t
+    static auto df(const vec_t &scores, label_t y) -> vec_t
     {
-        vec_t d(t.size());
-        auto factor = value_type(2) / static_cast<value_type>(t.size());
-        for (size_t i{0}; i < y.size(); i++)
-            d[i] = factor * (y[i] - t[i]);
+        // FIXME value range in (min, max), this depends on the last layer's
+        // output value range, typically depends on activation functions.
+        // refactor this
+        std::pair<value_type, value_type> range(0, 1);
+
+        vec_t d(scores.size());
+        auto factor = value_type(2) / static_cast<value_type>(scores.size());
+        for (size_t i{0}; i < scores.size(); i++)
+            d[i] = factor * (scores[i] - (i == y ? range.second : range.first));
         return d;
     }
 };
