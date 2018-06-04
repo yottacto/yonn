@@ -80,6 +80,7 @@ inline void convolutional_op_internal(
     }
 }
 
+// TODO change dw, db type to vec_t
 inline void convolutional_op_internal(
     tensor const& in_data,
     vec_t const& w,

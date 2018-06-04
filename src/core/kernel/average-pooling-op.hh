@@ -25,10 +25,12 @@ struct average_pooling_op : framework::op_kernel
 
         if (engine == core::backend::internal) {
             tensor const& in_data = context.input(0);
-            tensor& out_data = context.output(0);
+            tensor const& w       = context.input(1);
+            tensor const& bias    = context.input(2);
+            tensor& out_data      = context.output(0);
 
             average_pooling_op_internal(
-                in_data, out_data, params
+                in_data, w[0], bias[0], out_data, params
             );
         } else if (engine == core::backend::opencl) {
         } else {
@@ -53,11 +55,14 @@ struct average_pooling_grad_op : framework::op_kernel
 
         if (engine == core::backend::internal) {
             tensor const& in_data = context.input(0);
-            tensor& dx = context.input_grad(0);
-            tensor const& dout = context.output_grad(0);
+            tensor const& w       = context.input(1);
+            tensor& dw            = context.input_grad(1);
+            tensor& db            = context.input_grad(2);
+            tensor& dx            = context.input_grad(0);
+            tensor const& dout    = context.output_grad(0);
 
             average_pooling_op_internal(
-                in_data, dout, dx, params
+                in_data, w, dw, db, dout, dx, params
             );
         } else if (engine == core::backend::opencl) {
         } else {

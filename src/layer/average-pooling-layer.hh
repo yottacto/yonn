@@ -19,9 +19,10 @@ struct average_pooling_layer : layer
         size_t in_channels,
         size_t pool_width,
         size_t pool_height,
-        size_t stride
+        size_t stride,
+        bool has_bias = true
     ) :
-        layer({data_type::data}, {data_type::data}),
+        layer(std_input_types(has_bias), {data_type::data}),
         params(
             shape3d_t{width, height, in_channels},
             pool_width,
@@ -34,15 +35,24 @@ struct average_pooling_layer : layer
         backward_kernel(new core::kernel::average_pooling_grad_op(params))
     {
         in_shapes.emplace_back(params.in.size(), 1, 1);
+        in_shapes.emplace_back(params.in.size(), 1, 1);
+        in_shapes.emplace_back(params.in.size(), 1, 1);
+
         out_shapes.emplace_back(params.out.size(), 1, 1);
 
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
         input[0] = std::make_shared<edge>(input_shape(0));
+        input[1] = std::make_shared<edge>(input_shape(1));
+        input[2] = std::make_shared<edge>(input_shape(2));
 
         output[0] = std::make_shared<edge>(output_shape(0));
 
         // TODO init different kernel
+
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
     }
 
     average_pooling_layer(
@@ -76,12 +86,13 @@ struct average_pooling_layer : layer
 
     auto fan_in_size() const -> size_t override
     {
-        return params.pool_width * params.pool_height * params.in.depth;
+        return params.pool_width * params.pool_height;
     }
 
     auto fan_out_size() const -> size_t override
     {
-        return params.out.size();
+        return (params.pool_width / params.stride)
+            * (params.pool_height / params.stride);
     }
 
     void forward_propagation() override;
