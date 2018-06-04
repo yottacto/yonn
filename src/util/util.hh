@@ -81,6 +81,10 @@ inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
     value_type weight_base = std::sqrt(6. / (fan_in + fan_out));
 
     std::random_device rd{};
+
+    // auto seed = rd();
+    // std::cerr << "seed: " << seed << "\n";
+
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<value_type> dis(-weight_base, weight_base);
     std::generate(std::begin(a), std::end(a), [&]() { return dis(gen); });

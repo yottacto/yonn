@@ -23,8 +23,8 @@ struct mse
             d += sqr(scores[i] - (i == y ? range.second : range.first))
                 / value_type{2};
 
-        // return d / static_cast<value_type>(scores.size());
-        return d;
+        return d / static_cast<value_type>(scores.size());
+        // return d;
     }
 
     static auto df(const vec_t &scores, label_t y) -> vec_t
@@ -37,8 +37,8 @@ struct mse
         vec_t d(scores.size());
         auto factor = value_type(2) / static_cast<value_type>(scores.size());
         for (size_t i{0}; i < scores.size(); i++)
-            // d[i] = factor * (scores[i] - (i == y ? range.second : range.first));
-            d[i] = (scores[i] - (i == y ? range.second : range.first));
+            d[i] = factor * (scores[i] - (i == y ? range.second : range.first));
+            // d[i] = (scores[i] - (i == y ? range.second : range.first));
         return d;
     }
 };

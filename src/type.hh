@@ -10,7 +10,7 @@
 namespace yonn
 {
 
-using value_type = double;
+using value_type = float;
 using vec_t = std::vector<value_type>;
 
 auto inline operator/(vec_t const& lhs, value_type rhs)
