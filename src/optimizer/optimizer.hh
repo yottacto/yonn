@@ -55,7 +55,7 @@ protected:
 
 struct adagrad : stateful_optimizer<1>
 {
-    adagrad() : alpha{value_type(0.01)}, eps{value_type(1e-8)} {}
+    adagrad() : alpha{value_type{0.01}}, eps{value_type{1e-8}} {}
 
     void update(const vec_t &dw, vec_t &w)
     {
@@ -74,9 +74,9 @@ private:
 struct RMSprop : stateful_optimizer<1>
 {
     RMSprop() :
-        alpha(value_type(0.0001)),
-        mu(value_type(0.99)),
-        eps(value_type(1e-8))
+        alpha{value_type{0.0001}},
+        mu{value_type{0.99}},
+        eps{value_type{1e-8}}
     {}
 
     void update(const vec_t &dw, vec_t &w)
@@ -98,12 +98,12 @@ private:
 struct adam : stateful_optimizer<2>
 {
     adam() :
-        alpha(value_type(0.001)),
-        b1(value_type(0.9)),
-        b2(value_type(0.999)),
-        b1_t(value_type(0.9)),
-        b2_t(value_type(0.999)),
-        eps(value_type(1e-8))
+        alpha{value_type{0.001}},
+        b1{value_type{0.9}},
+        b2{value_type{0.999}},
+        b1_t{value_type{0.9}},
+        b2_t{value_type{0.999}},
+        eps{value_type{1e-8}}
     {}
 
     void update(const vec_t &dw, vec_t &w)
@@ -134,13 +134,15 @@ private:
     value_type eps;  // constant value to avoid zero-division
 };
 
-struct adamax : stateful_optimizer<2> {
-    adamax()
-        : alpha(value_type(0.002)),
-        b1(value_type(0.9)),
-        b2(value_type(0.999)),
-        b1_t(b1),
-        eps(value_type(1e-8)) {}
+struct adamax : stateful_optimizer<2>
+{
+    adamax() :
+        alpha{value_type{0.002}},
+        b1{value_type{0.9}},
+        b2{value_type{0.999}},
+        b1_t{b1},
+        eps{value_type{1e-8}}
+    {}
 
     void update(const vec_t &dw, vec_t &w)
     {
@@ -170,7 +172,7 @@ private:
 // SGD without momentum
 struct gradient_descent : optimizer
 {
-    gradient_descent() : alpha(value_type(0.01)), lambda(value_type(0)) {}
+    gradient_descent() : alpha{value_type(0.01)}, lambda{value_type(0)} {}
 
     void update(const vec_t &dw, vec_t &w)
     {
@@ -186,9 +188,9 @@ struct gradient_descent : optimizer
 struct momentum : stateful_optimizer<1>
 {
     momentum() :
-        alpha(value_type(0.01)),
-        lambda(value_type(0)),
-        mu(value_type(0.9))
+        alpha{value_type{0.01}},
+        lambda{value_type{0}},
+        mu{value_type{0.9}}
     {}
 
     void update(const vec_t &dw, vec_t &w)
