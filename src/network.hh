@@ -84,9 +84,11 @@ struct network
         net.backward(delta);
     }
 
+    template <class EachTest>
     auto test(
         tensor const& inputs,
-        std::vector<label_t> const& desired_outputs
+        std::vector<label_t> const& desired_outputs,
+        EachTest each_test
     ) -> result
     {
         result res;
@@ -94,7 +96,9 @@ struct network
             auto const predicted = forward_prop_max_index(inputs[sample]);
             auto const actual    = desired_outputs[sample];
             res.insert(predicted, actual);
+            each_test(false);
         }
+        each_test(true);
         return res;
     }
 
@@ -145,6 +149,7 @@ auto network<Net>::train(
     allocate_nsamples(batch_size);
 
     for (auto round = 0; round < epoch; round++) {
+        each_epoch(false);
         for (size_t i{0}; i < inputs.size(); i += batch_size) {
             train_once<Error>(
                 optimizer,
@@ -152,10 +157,11 @@ auto network<Net>::train(
                 std::next(std::begin(desired_outputs), i),
                 std::min<size_t>(batch_size, inputs.size() - i)
             );
-            each_batch();
+            each_batch(false);
         }
-        each_epoch();
+        each_batch(true);
     }
+    each_epoch(true);
 
     return true;
 }
