@@ -93,7 +93,7 @@ struct average_pooling_layer : layer
     auto fan_out_size() const -> size_t override
     {
         return (params.pool_width / params.stride)
-            * (params.pool_height / params.stride) * params.in.depth;
+            * (params.pool_height / params.stride);
     }
 
     void forward_propagation() override;

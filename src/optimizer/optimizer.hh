@@ -38,7 +38,8 @@ struct stateful_optimizer : optimizer
 {
     void reset() override
     {
-        for (auto &e : extra) e.clear();
+        for (auto& e : extra)
+            e.clear();
     }
 
 protected:
@@ -57,7 +58,7 @@ struct adagrad : stateful_optimizer<1>
 {
     adagrad() : alpha{value_type{0.01}}, eps{value_type{1e-8}} {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const& dw, vec_t &w)
     {
         vec_t &g = get<0>(w);
         for (size_t i{0}; i < w.size(); i++) {
@@ -79,9 +80,9 @@ struct RMSprop : stateful_optimizer<1>
         eps{value_type{1e-8}}
     {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const& dw, vec_t &w)
     {
-        vec_t &g = get<0>(w);
+        vec_t& g = get<0>(w);
 
         for (size_t i{0}; i < w.size(); i++) {
             g[i] = mu * g[i] + (1 - mu) * dw[i] * dw[i];
@@ -106,7 +107,7 @@ struct adam : stateful_optimizer<2>
         eps{value_type{1e-8}}
     {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const&dw, vec_t &w)
     {
         vec_t &mt = get<0>(w);
         vec_t &vt = get<1>(w);
@@ -144,7 +145,7 @@ struct adamax : stateful_optimizer<2>
         eps{value_type{1e-8}}
     {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const&dw, vec_t &w)
     {
         vec_t &mt = get<0>(w);
         vec_t &ut = get<1>(w);
@@ -174,7 +175,7 @@ struct gradient_descent : optimizer
 {
     gradient_descent() : alpha{value_type(0.01)}, lambda{value_type(0)} {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const&dw, vec_t &w)
     {
         for (size_t i{0}; i < w.size(); i++)
             w[i] = w[i] - alpha * (dw[i] + lambda * w[i]);
@@ -193,7 +194,7 @@ struct momentum : stateful_optimizer<1>
         mu{value_type{0.9}}
     {}
 
-    void update(const vec_t &dw, vec_t &w)
+    void update(vec_t const&dw, vec_t &w)
     {
         vec_t &dwprev = get<0>(w);
 

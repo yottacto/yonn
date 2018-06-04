@@ -69,15 +69,23 @@ int main()
     // train_images.resize(cut);
     // train_labels.resize(cut);
 
-    auto mini_batch_size = 8;
+    auto mini_batch_size = 16;
 
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
+
+    auto first = true;
     auto each_batch = [&](auto last = false) {
+        if (first) {
+            t.start();
+            first = false;
+        }
         pd.tick(mini_batch_size);
         pd.display(std::cerr);
         if (last) {
+            t.stop();
             std::cerr << "\ntraining completed.\n";
+            std::cerr << "time elapsed: " << t.elapsed_seconds() << "s.\n";
         }
     };
 
@@ -91,17 +99,15 @@ int main()
         }
     };
 
-    yonn::optimizer::adamax optimizer;
-    // yonn::optimizer::adagrad optimizer;
+    // yonn::optimizer::adamax optimizer;
+    yonn::optimizer::adagrad optimizer;
 
     optimizer.alpha *= std::min(
         yonn::value_type(4),
         static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
     );
 
-    t.start();
-
-    net.train<yonn::loss_function::softmax>(
+    net.train<yonn::loss_function::mse>(
         optimizer,
         train_images,
         train_labels,
@@ -111,8 +117,6 @@ int main()
         each_epoch
     );
 
-    t.stop();
-    std::cerr << "time elapsed: " << t.elapsed_seconds() << "s.\n";
 
     // result for train images
     // {
