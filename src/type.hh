@@ -90,8 +90,17 @@ struct result
     }
 
     template <class OStream>
+    void print_accuracy(OStream& os) const
+    {
+        os << "accuracy: " << std::fixed << std::setprecision(2)
+            << accuracy()
+            << " (" << success << "/" << total << ")\n";
+    }
+
+    template <class OStream>
     void print_detail(OStream& os) const
     {
+        print_accuracy(os);
         auto all = labels();
         os << std::setw(6) << '*';
         for (auto i : all)
