@@ -30,7 +30,7 @@ struct mse
         // FIXME value range in (min, max), this depends on the last layer's
         // output value range, typically depends on activation functions.
         // refactor this
-        std::pair<value_type, value_type> range(0, 1);
+        std::pair<value_type, value_type> range(-1, 1);
 
         vec_t d(scores.size());
         auto factor = value_type(2) / static_cast<value_type>(scores.size());

@@ -1,4 +1,7 @@
 #pragma once
+// TODO remove this
+#include <iostream>
+
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -80,6 +83,9 @@ struct network
         std::vector<label_t> const& desired_output
     )
     {
+
+        // std::cerr << "\n> " << Error::f(output[0], desired_output[0]) << "\n";
+
         tensor delta = loss_function::gradient<Error>(output, desired_output);
         net.backward(delta);
     }

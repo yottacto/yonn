@@ -33,7 +33,10 @@ inline void convolutional_op_internal(
     auto line_s   = in_w * params.h_stride;
 
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto& out      = out_data[sample];
 
@@ -92,7 +95,11 @@ inline void convolutional_op_internal(
 
     std::fill(std::begin(dw[0]), std::end(dw[0]), 0);
     std::fill(std::begin(db[0]), std::end(db[0]), 0);
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         std::fill(std::begin(dx[sample]), std::end(dx[sample]), 0);
 
         for (size_t i{0}; i < params.in.depth; i++)

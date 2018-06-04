@@ -21,7 +21,10 @@ inline void fully_connected_op_internal(
 )
 {
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto& out      = out_data[sample];
         auto const& in_size = params.in_size;
@@ -59,7 +62,11 @@ inline void fully_connected_op_internal(
     std::fill(std::begin(db[0]), std::end(db[0]), 0);
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         // derivatives for input data, heere dx
         // FIXME params in_size and out_size
         for (size_t i{0}; i < in_size; i++)

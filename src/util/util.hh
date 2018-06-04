@@ -82,7 +82,7 @@ inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
 
     std::random_device rd{};
     std::mt19937 gen{rd()};
-    std::uniform_real_distribution<> dis(-weight_base, weight_base);
+    std::uniform_real_distribution<value_type> dis(-weight_base, weight_base);
     std::generate(std::begin(a), std::end(a), [&]() { return dis(gen); });
 }
 
@@ -94,8 +94,9 @@ template <class Iter1, class Iter2>
 auto dot(Iter1 it1, Iter2 it2, size_t n) -> value_type
 {
     value_type res{0};
-    for (size_t i{0}; i < n; i++, ++it1, ++it2)
-        res += *it1 * *it2;
+
+    for (size_t i{0}; i < n; i++)
+        res += it1[i] * it2[i];
     return res;
 }
 

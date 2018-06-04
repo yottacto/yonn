@@ -19,7 +19,10 @@ inline void average_pooling_op_internal(
 )
 {
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto & out = out_data[sample];
         for (size_t od{0}; od < params.out.depth; od++)
@@ -56,7 +59,10 @@ inline void average_pooling_op_internal(
 )
 {
     // TODO parallelize
-    for (size_t sample{0}; sample < in_data.size(); sample++) {
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& dout_sample = dout[sample];
         auto& dx_sample = dx[sample];
         std::fill(std::begin(dx_sample), std::end(dx_sample), 0);

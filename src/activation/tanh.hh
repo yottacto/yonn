@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include "layer/layer.hh"
+#include "util/util.hh"
 #include "tensor.hh"
 
 namespace yonn
@@ -57,13 +58,19 @@ void tanh::backward_propagation()
 
 void tanh::forward_activation(vec_t const& in, vec_t& out)
 {
-    for (size_t i{0}; i < in.size(); i++)
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t i = 0; i < in.size(); i++)
         out[i] = std::tanh(in[i]);
 }
 
 void tanh::backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy)
 {
-    for (size_t i{0}; i < x.size(); i++)
+    #if USE_OPENMP
+    #pragma omp for
+    #endif
+    for (size_t i = 0; i < x.size(); i++)
         dx[i] = dy[i] * (value_type(1) - sqr(y[i]));
 }
 
