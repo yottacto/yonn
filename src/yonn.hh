@@ -2,7 +2,7 @@
 #include "network.hh"
 #include "tensor.hh"
 #include "util/util.hh"
-#include "util/gradient_check.hh"
+#include "util/gradient-check.hh"
 #include "type.hh"
 
 // TODO header file include all layers
