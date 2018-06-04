@@ -1,9 +1,11 @@
 #pragma once
+#include "type.hh"
 #include "network.hh"
 #include "tensor.hh"
+
 #include "util/util.hh"
 #include "util/gradient-check.hh"
-#include "type.hh"
+#include "util/progress-display.hh"
 
 // TODO header file include all layers
 #include "layer/fully-connected-layer.hh"
