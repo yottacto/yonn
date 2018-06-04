@@ -39,6 +39,7 @@ inline void convolutional_op_internal(
     for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto& out      = out_data[sample];
+        std::fill(std::begin(out), std::end(out), 0);
 
         for (size_t i{0}; i < out_d; i++) {
             auto* pa = &out[params.out.get_index(0, 0, i)];
@@ -67,7 +68,7 @@ inline void convolutional_op_internal(
                             pw_element  += w_w;
                             pin_element += in_w;
                         }
-                        pout[x] = sum;
+                        pout[x] += sum;
                         pin_line += w_s;
                     }
                     pout += out_w;
