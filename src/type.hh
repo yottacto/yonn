@@ -1,6 +1,7 @@
 #pragma once
 #include <iomanip>
 #include <algorithm>
+#include <iterator>
 #include <vector>
 #include <set>
 #include <map>
@@ -11,6 +12,16 @@ namespace yonn
 
 using value_type = double;
 using vec_t = std::vector<value_type>;
+
+auto inline operator/(vec_t const& lhs, value_type rhs)
+{
+    auto res = lhs;
+    std::transform(std::begin(res), std::end(res), std::begin(res),
+        [&](auto x) {
+            return std::divides<value_type>{}(x, rhs);
+        });
+    return res;
+}
 
 // TODO unsigned int or unsigned long
 using size_t = unsigned int;

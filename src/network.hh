@@ -58,7 +58,7 @@ struct network
         size_t batch_size
     );
 
-    // FIXME refactor tensor
+    // TODO refactor tensor
     auto forward_propagation(vec_t const& input) -> tensor
     {
         return forward_propagation(tensor{input});

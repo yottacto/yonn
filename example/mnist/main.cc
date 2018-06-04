@@ -99,19 +99,19 @@ int main()
 
     // std::cerr << net.net.all_nodes.back()->output[0]->data[0].size() << "\n";
 
-    // 0.001 82%
-    // 0.01  80%
     yonn::optimizer::naive optimizer{0.01};
 
     // auto cut = 10000;
     // train_images.resize(cut);
     // train_labels.resize(cut);
 
+    auto mini_batch_size = 32;
+
     auto iter = 0;
     auto each_batch = [&]() {
-        if (iter % 1000 == 0)
+        if (iter % 1000 < mini_batch_size)
             std::cerr << "iter: " << iter << "\n";
-        iter++;
+        iter += mini_batch_size;
     };
 
     auto epoch = 0;
@@ -121,11 +121,11 @@ int main()
     };
 
 
-    net.train<yonn::loss_function::mse>(
+    net.train<yonn::loss_function::softmax>(
         optimizer,
         train_images,
         train_labels,
-        1,
+        mini_batch_size,
         1,
         each_batch,
         each_epoch
@@ -136,11 +136,20 @@ int main()
         std::cout << i << " ";
     std::cout << "\n";
 
-    auto r = net.test(test_images, test_labels);
-    // auto r = net.test(train_images, train_labels);
-    r.print_detail(std::cout);
+    // result for train images
+    {
+        auto r = net.test(train_images, train_labels);
+        r.print_detail(std::cout);
+        std::cerr << "accuracy: " << r.accuracy() << "\n";
+    }
 
-    std::cerr << "accuracy: " << r.accuracy() << "\n";
+    // result for test images
+    {
+        auto r = net.test(test_images, test_labels);
+        // auto r = net.test(train_images, train_labels);
+        r.print_detail(std::cout);
+        std::cerr << "accuracy: " << r.accuracy() << "\n";
+    }
 
     std::cout << "hello world\n";
 }
