@@ -90,15 +90,21 @@ int main()
     auto mini_batch_size = 32;
 
     yonn::util::progress_display pd(train_images.size());
-    auto each_batch = [&]() {
+    auto each_batch = [&](auto last = false) {
         pd.tick(mini_batch_size);
         pd.display(std::cout);
+        if (last) {
+            std::cout << "\ntraining completed.\n";
+        }
     };
 
     auto epoch = 0;
-    auto each_epoch = [&]() {
-        std::cerr << "\nepoch: " << epoch++ << "\n";
+    auto each_epoch = [&](auto last = false) {
+        std::cerr << "epoch: " << epoch++ << "\n";
         std::cout << "training progress:\n";
+        if (last) {
+            std::cout << "\nall epoches completed.\n";
+        }
     };
 
     yonn::optimizer::adagrad optimizer;
@@ -118,9 +124,18 @@ int main()
     //     r.print_detail(std::cout);
     // }
 
+    yonn::util::progress_display test_pd(test_images.size());
+    auto each_test = [&](auto last = false) {
+        test_pd.tick();
+        test_pd.display(std::cout);
+        if (last) {
+            std::cout << "\ntest completed.\n";
+        }
+    };
+
     // result for test images
     {
-        auto r = net.test(test_images, test_labels);
+        auto r = net.test(test_images, test_labels, each_test);
         r.print_detail(std::cout);
     }
 
