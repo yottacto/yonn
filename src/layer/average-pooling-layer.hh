@@ -89,10 +89,11 @@ struct average_pooling_layer : layer
         return params.pool_width * params.pool_height;
     }
 
+    // TODO actually without multiplying depth, but this seems better?
     auto fan_out_size() const -> size_t override
     {
         return (params.pool_width / params.stride)
-            * (params.pool_height / params.stride);
+            * (params.pool_height / params.stride) * params.in.depth;
     }
 
     void forward_propagation() override;
