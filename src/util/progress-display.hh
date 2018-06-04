@@ -1,6 +1,7 @@
 #pragma once
-#include <cstddef>
+#include <algorithm>
 #include <iomanip>
+#include <cstddef>
 
 namespace yonn
 {
@@ -14,8 +15,8 @@ struct progress_display
     explicit progress_display(size_type total, size_type len = 60, size_type count = 0)
         : total{total}, len{len}, count{count} {}
 
-    void tick() { count++; }
-    void tick(size_t c) { count += c; }
+    void tick() { count = std::min(total, count + 1); }
+    void tick(size_t c) { count = std::min(total, count + c); }
 
     template <class Stream>
     void display(Stream& os) const
