@@ -1,26 +1,8 @@
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
+#include <cmath>
 #include "yonn.hh"
-
-void print(yonn::tensor const& t)
-{
-    for (auto v : t) {
-        auto count = 0;
-        for (auto i : v) {
-            if (i == -1)
-                std::cout << ".";
-            else
-                std::cout << "*";
-            // std::cout << std::fixed << std::setprecision(2) << std::setw(4) << i << " ";
-            // std::cout << i << " ";
-            count++;
-            if (count % 32 == 0)
-                std::cout << "\n";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
-}
 
 #define O true
 #define X false
@@ -87,27 +69,38 @@ int main()
     // train_images.resize(cut);
     // train_labels.resize(cut);
 
-    auto mini_batch_size = 32;
+    auto mini_batch_size = 8;
 
+    yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
     auto each_batch = [&](auto last = false) {
         pd.tick(mini_batch_size);
-        pd.display(std::cout);
+        pd.display(std::cerr);
         if (last) {
-            std::cout << "\ntraining completed.\n";
+            std::cerr << "\ntraining completed.\n";
         }
     };
 
     auto epoch = 0;
     auto each_epoch = [&](auto last = false) {
-        std::cerr << "epoch: " << epoch++ << "\n";
-        std::cout << "training progress:\n";
-        if (last) {
-            std::cout << "\nall epoches completed.\n";
+        if (last)
+            std::cerr << "\nall epoches completed.\n";
+        else {
+            std::cerr << "epoch: " << epoch++ << "\n";
+            std::cerr << "training (" << train_images.size() << ") images:\n";
         }
     };
 
-    yonn::optimizer::adagrad optimizer;
+    yonn::optimizer::adamax optimizer;
+    // yonn::optimizer::adagrad optimizer;
+
+    optimizer.alpha *= std::min(
+        yonn::value_type(4),
+        static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
+    );
+
+    t.start();
+
     net.train<yonn::loss_function::softmax>(
         optimizer,
         train_images,
@@ -118,27 +111,41 @@ int main()
         each_epoch
     );
 
-    // // result for train images
-    // {
-    //     auto r = net.test(train_images, train_labels);
-    //     r.print_detail(std::cout);
-    // }
+    t.stop();
+    std::cerr << "time elapsed: " << t.elapsed_seconds() << "s.\n";
 
-    yonn::util::progress_display test_pd(test_images.size());
-    auto each_test = [&](auto last = false) {
-        test_pd.tick();
-        test_pd.display(std::cout);
-        if (last) {
-            std::cout << "\ntest completed.\n";
-        }
-    };
+    // result for train images
+    // {
+    //     yonn::util::progress_display test_pd(train_images.size());
+    //     std::cerr << "testing (" << train_images.size() << ") images:\n";
+    //     auto each_test = [&](auto last = false) {
+    //         test_pd.tick();
+    //         test_pd.display(std::cerr);
+    //         if (last) {
+    //             std::cerr << "\ntest completed.\n";
+    //         }
+    //     };
+
+    //     auto r = net.test(train_images, train_labels, each_test);
+    //     r.print_detail(std::cerr);
+    // }
 
     // result for test images
     {
+        yonn::util::progress_display test_pd(test_images.size());
+        std::cerr << "testing (" << test_images.size() << ") images:\n";
+        auto each_test = [&](auto last = false) {
+            test_pd.tick();
+            test_pd.display(std::cerr);
+            if (last) {
+                std::cerr << "\ntest completed.\n";
+            }
+        };
+
         auto r = net.test(test_images, test_labels, each_test);
-        r.print_detail(std::cout);
+        r.print_detail(std::cerr);
     }
 
-    std::cout << "hello world\n";
+    std::cerr << "hello world\n";
 }
 
