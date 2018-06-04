@@ -77,8 +77,8 @@ inline void parse_images(
     tensor& images,
     value_type scale_min,
     value_type scale_max,
-    size_t x_padding,
-    size_t y_padding
+    int x_padding,
+    int y_padding
 )
 {
     // TODO same error case

@@ -30,7 +30,7 @@ struct nodes
     void update_weight(optimizer::optimizer* opt)
     {
         for (auto& l : all_nodes)
-            l->update_wegith(opt);
+            l->update_weight(opt);
     }
 
 // TODO uncomment
