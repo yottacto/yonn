@@ -66,15 +66,7 @@ int main()
         test_labels
     );
 
-    // auto i = 18;
-    // print({train_images[i]});
-    // std::cout << train_labels[i] << "\n";
-    // return 0;
-
     yonn::network<yonn::topo::sequential> net;
-
-    // net << fc(32 * 32, 10)
-    //     << tanh();
 
     net << conv(32, 32, 5, 1, 6)
         << tanh()
@@ -91,36 +83,25 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-    // net.allocate_nsamples(1);
-    // std::cerr << "n samples allocated.\n";
-
-    // net.print_out_shapes();
-    // return 0;
-
-    // std::cerr << net.net.all_nodes.back()->output[0]->data[0].size() << "\n";
-
-    yonn::optimizer::naive optimizer{0.01};
-
     // auto cut = 10000;
     // train_images.resize(cut);
     // train_labels.resize(cut);
 
     auto mini_batch_size = 32;
 
-    auto iter = 0;
+    yonn::util::progress_display pd(train_images.size());
     auto each_batch = [&]() {
-        if (iter % 1000 < mini_batch_size)
-            std::cerr << "iter: " << iter << "\n";
-        iter += mini_batch_size;
+        pd.tick(mini_batch_size);
+        pd.display(std::cout);
     };
 
     auto epoch = 0;
     auto each_epoch = [&]() {
-        std::cerr << "epoch: " << epoch << "\n";
-        epoch++;
+        std::cerr << "\nepoch: " << epoch++ << "\n";
+        std::cout << "training progress:\n";
     };
 
-
+    yonn::optimizer::adagrad optimizer;
     net.train<yonn::loss_function::softmax>(
         optimizer,
         train_images,
@@ -131,24 +112,16 @@ int main()
         each_epoch
     );
 
-    auto vec = net.forward_propagation(test_images[0]);
-    for (auto i : vec[0])
-        std::cout << i << " ";
-    std::cout << "\n";
-
-    // result for train images
-    {
-        auto r = net.test(train_images, train_labels);
-        r.print_detail(std::cout);
-        std::cerr << "accuracy: " << r.accuracy() << "\n";
-    }
+    // // result for train images
+    // {
+    //     auto r = net.test(train_images, train_labels);
+    //     r.print_detail(std::cout);
+    // }
 
     // result for test images
     {
         auto r = net.test(test_images, test_labels);
-        // auto r = net.test(train_images, train_labels);
         r.print_detail(std::cout);
-        std::cerr << "accuracy: " << r.accuracy() << "\n";
     }
 
     std::cout << "hello world\n";
