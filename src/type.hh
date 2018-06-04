@@ -10,7 +10,7 @@
 namespace yonn
 {
 
-using value_type = double;
+using value_type = float;
 using vec_t = std::vector<value_type>;
 
 auto inline operator/(vec_t const& lhs, value_type rhs)
@@ -101,6 +101,7 @@ struct result
     void print_detail(OStream& os) const
     {
         print_accuracy(os);
+        os << "confusion matrix:\n";
         auto all = labels();
         os << std::setw(6) << '*';
         for (auto i : all)

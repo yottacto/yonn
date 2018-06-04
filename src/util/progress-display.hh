@@ -24,7 +24,7 @@ struct progress_display
         auto progress = static_cast<double>(count) / static_cast<double>(total);
         size_type pos = len * progress;
         os << std::string(pos, '#') << std::string(len - pos, '-') << "]";
-        os << std::setw(3) << static_cast<size_type>(progress * 100.) << "%\r";
+        os << std::setw(4) << static_cast<size_type>(progress * 100.) << "%\r";
         os.flush();
     }
 
