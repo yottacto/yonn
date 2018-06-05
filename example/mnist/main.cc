@@ -150,7 +150,7 @@ int main()
         train_images,
         train_labels,
         mini_batch_size,
-        2,
+        8,
         each_batch,
         each_epoch
     );
