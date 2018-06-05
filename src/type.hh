@@ -1,5 +1,6 @@
 #pragma once
 #include <iomanip>
+#include <string>
 #include <algorithm>
 #include <iterator>
 #include <vector>
@@ -9,6 +10,10 @@
 
 namespace yonn
 {
+
+std::string const COLOR_RST{"\e[0m"};
+std::string const COLOR_ACT{"\e[1;32m"};
+std::string const COLOR_ARG{"\e[1;35m"};
 
 using value_type = float;
 using vec_t = std::vector<value_type>;
@@ -76,6 +81,7 @@ using shape3d_t = shape3d<size_t>;
 
 struct result
 {
+
     auto accuracy() const
     {
         return success * 100. / total;
@@ -92,9 +98,11 @@ struct result
     template <class OStream>
     void print_accuracy(OStream& os) const
     {
-        os << "accuracy: " << std::fixed << std::setprecision(2)
-            << accuracy()
-            << " (" << success << "/" << total << ")\n";
+        os << COLOR_ACT << "accuracy: "
+            << COLOR_ARG << std::fixed << std::setprecision(2)
+            << accuracy() << "%"
+            << " (" << success << "/" << total << ")\n"
+            << COLOR_RST;
     }
 
     template <class OStream>

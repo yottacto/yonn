@@ -20,4 +20,5 @@
 #include "io/mnist-parser.hh"
 
 #include "activation/tanh.hh"
+#include "activation/leaky_relu.hh"
 

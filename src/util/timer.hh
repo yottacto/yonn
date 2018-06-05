@@ -19,7 +19,7 @@ namespace util
         {
             _end = clock_type::now();
             duration_type elapsed = _end - _start;
-            tot += elapsed.count();
+            tot = elapsed.count();
         }
 
         void reset()

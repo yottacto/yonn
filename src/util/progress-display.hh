@@ -29,6 +29,11 @@ struct progress_display
         os.flush();
     }
 
+    void reset()
+    {
+        count = 0;
+    }
+
     size_type total;
     size_type len;
     size_type count;

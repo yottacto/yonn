@@ -82,12 +82,19 @@ inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
 
     std::random_device rd{};
 
-    // auto seed = rd();
-    // std::cerr << "seed: " << seed << "\n";
+    static auto seed = rd();
+    std::cerr << "seed: " << seed << "\n";
 
-    std::mt19937 gen{rd()};
+    static std::mt19937 gen{seed};
+    // static std::mt19937 gen{216750927};
     std::uniform_real_distribution<value_type> dis(-weight_base, weight_base);
     std::generate(std::begin(a), std::end(a), [&]() { return dis(gen); });
+}
+
+// to ignore warning about unused parameter
+template <class T>
+void ignore(T&&)
+{
 }
 
 namespace compute
