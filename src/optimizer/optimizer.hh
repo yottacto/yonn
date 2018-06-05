@@ -58,9 +58,9 @@ struct adagrad : stateful_optimizer<1>
 {
     adagrad() : alpha{value_type{0.01}}, eps{value_type{1e-8}} {}
 
-    void update(vec_t const& dw, vec_t &w)
+    void update(vec_t const& dw, vec_t& w)
     {
-        vec_t &g = get<0>(w);
+        vec_t& g = get<0>(w);
         for (size_t i{0}; i < w.size(); i++) {
             g[i] += dw[i] * dw[i];
             w[i] -= alpha * dw[i] / (std::sqrt(g[i]) + eps);
@@ -201,6 +201,27 @@ struct momentum : stateful_optimizer<1>
         for (size_t i{0}; i < w.size(); i++) {
             value_type v = mu * dwprev[i] - alpha * (dw[i] + w[i] * lambda);
             w[i] += v;
+            dwprev[i] = v;
+        }
+    }
+
+    value_type alpha;   // learning rate
+    value_type lambda;  // weight decay
+    value_type mu;      // momentum
+};
+
+struct nesterov_momentum : stateful_optimizer<1>
+{
+    nesterov_momentum() :
+        alpha{value_type{0.01}}, lambda{value_type{0}}, mu{value_type{0.9}}
+    {}
+
+    void update(vec_t const& dw, vec_t& w)
+    {
+        vec_t &dwprev = get<0>(w);
+        for (size_t i{0}; i < w.size(); i++) {
+            value_type v = mu * dwprev[i] - alpha * (dw[i] + w[i] * lambda);
+            w[i] += (-mu) * dwprev[i] + (1 + mu) * v;
             dwprev[i] = v;
         }
     }
