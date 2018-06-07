@@ -1,5 +1,9 @@
 == yonn
 
+== Progress
+
+- stage i completed, works great on CPU
+
 === Design revision
 
 - is it needful to make every layer's op inheirts from `op_kernel`
