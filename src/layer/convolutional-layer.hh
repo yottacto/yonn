@@ -1,5 +1,7 @@
 #pragma once
 #include <memory>
+#include <variant>
+#include <string>
 #include "layer.hh"
 #include "type.hh"
 #include "util/util.hh"
@@ -55,6 +57,11 @@ struct convolutional_layer : layer
         core::backend_type backend   // = core::default_engine()
     );
 
+    auto name() const -> std::string override
+    {
+        return "convolutional layer";
+    }
+
     auto fan_in_size() const -> size_t override
     {
         return params.weight.width * params.weight.height * params.weight.depth;
@@ -71,8 +78,8 @@ struct convolutional_layer : layer
         core::engine::engine_type& eng
     ) override;
 
-    void forward_propagation() override;
-    void backward_propagation() override;
+    void forward_propagation(core::engine::engine_type& eng) override;
+    void backward_propagation(core::engine::engine_type& eng) override;
 
 // private:
     core::conv_parameter params;
@@ -228,26 +235,38 @@ void convolutional_layer::init_engine(
     }
 }
 
-void convolutional_layer::forward_propagation()
+void convolutional_layer::forward_propagation(core::engine::engine_type& eng)
 {
     // TODO not same size padding, need local storage
 
     // TODO init once
     // TODO const in data?
-    std::vector<tensor*> in_data(in_channels);
-    for (size_t i{0}; i < in_channels; i++)
-        in_data[i] = input[i]->get_data();
-    std::vector<tensor*> out_data(out_channels);
-    for (size_t i{0}; i < out_channels; i++)
-        out_data[i] = output[i]->get_data();
+    using data_type = std::variant<tensor*, cl::Buffer*>;
+    std::vector<data_type> in_data(in_channels);
+    std::vector<data_type> out_data(out_channels);
+    auto const& backend = layer::engine();
+    if (backend == core::backend_type::internal) {
+        for (size_t i{0}; i < in_channels; i++)
+            in_data[i].emplace<tensor*>(input[i]->get_data());
+
+        for (size_t i{0}; i < out_channels; i++)
+            out_data[i].emplace<tensor*>(output[i]->get_data());
+
+    } else if (backend == core::backend_type::opencl) {
+        for (size_t i{0}; i < in_channels; i++)
+            in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
+
+        for (size_t i{0}; i < out_channels; i++)
+            out_data[i].emplace<cl::Buffer*>(output[i]->get_data_buffer());
+    }
 
     forward_context.set_in_out(in_data, out_data);
     forward_context.set_engine(layer::engine());
 
-    forward_kernel->compute(forward_context);
+    forward_kernel->compute(forward_context, eng);
 }
 
-void convolutional_layer::backward_propagation()
+void convolutional_layer::backward_propagation(core::engine::engine_type& eng)
 {
     // TODO same size padding
 

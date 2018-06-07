@@ -65,6 +65,8 @@ struct edge
 
     auto get_data() -> tensor* { return &data; }
     auto get_grad() -> tensor* { return &grad; }
+    auto get_data_buffer() -> cl::Buffer* { return &data_buffer; }
+    auto get_grad_buffer() -> cl::Buffer* { return &grad_buffer; }
 
     // merge all grads to grad[0]
     void merge_grads()

@@ -1,4 +1,5 @@
 #pragma once
+#include <variant>
 #include "type.hh"
 #include "core/backend.hh"
 #include "core/framework/op-kernel.hh"
@@ -19,21 +20,27 @@ struct convolutional_op : framework::op_kernel
     {
     }
 
-    void compute(framework::op_kernel_context& context) override
+    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng) override
     {
         auto const engine = context.engine();
 
         if (engine == core::backend_type::internal) {
-            tensor const& in_data = context.input(0);
-            tensor const& w       = context.input(1);
+            using data_type = tensor;
+            data_type const& in_data = *std::get<data_type*>(context.input(0));
+            data_type const& w       = *std::get<data_type*>(context.input(1));
             // TODO params to specify has_bias, using pointer and nullptr
-            tensor const& bias    = context.input(2);
-            tensor& out_data      = context.output(0);
+            data_type const& bias    = *std::get<data_type*>(context.input(2));
+            data_type& out_data      = *std::get<data_type*>(context.output(0));
 
             convolutional_op_internal(
                 in_data, w[0], bias[0], out_data, params
             );
         } else if (engine == core::backend_type::opencl) {
+            using data_type = cl::Buffer;
+            data_type& in_data  = *std::get<data_type*>(context.input(0));
+            data_type& w        = *std::get<data_type*>(context.input(1));
+            data_type& bias     = *std::get<data_type*>(context.input(2));
+            data_type& out_data = *std::get<data_type*>(context.output(0));
         } else {
             // TODO not support backend engine
         }

@@ -24,11 +24,12 @@ struct layer : node
 
     virtual ~layer() = default;
 
+    virtual auto name() const -> std::string = 0;
     virtual auto fan_in_size()  const -> size_t = 0;
     virtual auto fan_out_size() const -> size_t = 0;
 
-    virtual void forward_propagation()  = 0;
-    virtual void backward_propagation() = 0;
+    virtual void forward_propagation(core::engine::engine_type& eng)  = 0;
+    virtual void backward_propagation(core::engine::engine_type& eng) = 0;
 
     void allocate_nsamples(size_t batch_size);
 
@@ -47,8 +48,8 @@ struct layer : node
     auto engine() const -> core::backend_type { return backend; }
     void set_engine(core::backend_type const& backend) { this->backend = backend; }
 
-    void forward() { forward_propagation(); }
-    void backward() { backward_propagation(); }
+    void forward(core::engine::engine_type& eng) { forward_propagation(eng); }
+    void backward(core::engine::engine_type& eng) { backward_propagation(eng); }
 
     void set_input_data(std::vector<tensor> const& input);
     void set_input_data(tensor const& input);

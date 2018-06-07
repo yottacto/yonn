@@ -44,6 +44,8 @@ struct sequential : nodes<sequential>
         if (l.engine() != backend)
             united_backend = false;
 
+        eng.init_kernel(l.name());
+
         if (all_nodes.size() != 1) {
             connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
         }
@@ -92,7 +94,7 @@ auto sequential::forward(tensor const& first) -> tensor
     all_nodes.front()->set_input_data(first);
 
     for (auto const& l : all_nodes)
-        l->forward();
+        l->forward(eng);
 
     tensor outt;
     // FIXME
