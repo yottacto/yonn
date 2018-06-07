@@ -1,8 +1,9 @@
 #pragma once
-#include <any>
-#include <variant>
-#include <unordered_map>
+#include <string>
 #include <vector>
+#include <unordered_map>
+#include <variant>
+#include <any>
 #include <CL/cl.hpp>
 #include "type.hh"
 #include "tensor.hh"
@@ -33,6 +34,32 @@ struct opencl
         default_device = all_devices[0];
 
         context = cl::Context{default_device};
+
+        queue = cl::CommandQueue{context, default_device};
+    }
+
+    void init_kernel(std::string const& name, std::string const& kernel_code)
+    {
+        cl::Program::Sources sources;
+
+        sources.emplace_back(kernel_code.c_str(), kernel_code.size());
+
+        cl::Program program{context, sources};
+        if (program.build({default_device}) != CL_SUCCESS) {
+            // TODO throw error
+        }
+
+        forward_kernels.emplace(std::make_pair(
+            name,
+            cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "forward")
+        ));
+
+        backward_kernels.emplace(std::make_pair(
+            name,
+            cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "backward")
+        ));
+
+        // TODO eargs
     }
 
     std::vector<cl::Platform> all_platforms;
@@ -40,9 +67,12 @@ struct opencl
     std::vector<cl::Device> all_devices;
     cl::Device default_device;
     cl::Context context;
+    cl::CommandQueue queue;
 
-    std::unordered_map<framework::op_kernel*, std::any>   kernels;
-    std::unordered_map<buffer_key_type,       cl::Buffer> buffers;
+    std::unordered_map<std::string, std::any> forward_kernels;
+    std::unordered_map<std::string, std::any> backward_kernels;
+    std::unordered_map<std::string, cl::EnqueueArgs> forward_eargs;
+    std::unordered_map<std::string, cl::EnqueueArgs> backward_eargs;
 };
 
 
