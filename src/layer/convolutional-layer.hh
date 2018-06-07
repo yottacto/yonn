@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 #include <variant>
+#include <memory>
 #include <string>
 #include "layer.hh"
 #include "type.hh"
@@ -8,6 +8,8 @@
 #include "core/parameter/conv-parameter.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/kernel/convolutional-op.hh"
+
+#include "core/kernel/opencl/convolutional.hh"
 
 namespace yonn
 {
@@ -60,6 +62,16 @@ struct convolutional_layer : layer
     auto name() const -> std::string override
     {
         return "convolutional layer";
+    }
+
+    auto kernel_code() const -> std::string
+    {
+        return opencl_kernel::conv_kernel_code;
+    }
+
+    auto nd_size() const -> size_t
+    {
+        return output_shape(0).size() * batch_size;
     }
 
     auto fan_in_size() const -> size_t override
@@ -118,8 +130,8 @@ convolutional_layer::convolutional_layer(
     ),
     // FIXME op_kernel need context to constrct, in fact in order to
     // specify device and layer's params
-    forward_kernel(new core::kernel::convolutional_op(params)),
-    backward_kernel(new core::kernel::convolutional_grad_op(params))
+    forward_kernel(new core::kernel::convolutional_op(params, name())),
+    backward_kernel(new core::kernel::convolutional_grad_op(params, name()))
 {
     in_shapes.emplace_back(
         in_length(in_width, window_width, pad_type),
@@ -270,23 +282,40 @@ void convolutional_layer::backward_propagation(core::engine::engine_type& eng)
 {
     // TODO same size padding
 
-    std::vector<tensor*> in_data(in_channels);
-    std::vector<tensor*> in_grad(in_channels);
-    for (size_t i{0}; i < in_channels; i++) {
-        in_data[i] = input[i]->get_data();
-        in_grad[i] = input[i]->get_grad();
-    }
-    std::vector<tensor*> out_data(out_channels);
-    std::vector<tensor*> out_grad(out_channels);
-    for (size_t i{0}; i < out_channels; i++) {
-        out_data[i] = output[i]->get_data();
-        out_grad[i] = output[i]->get_grad();
+    using data_type = std::variant<tensor*, cl::Buffer*>;
+    std::vector<data_type> in_data(in_channels);
+    std::vector<data_type> in_grad(in_channels);
+    std::vector<data_type> out_data(out_channels);
+    std::vector<data_type> out_grad(out_channels);
+
+    auto const& backend = layer::engine();
+    if (backend == core::backend_type::internal) {
+        for (size_t i{0}; i < in_channels; i++) {
+            in_data[i].emplace<tensor*>(input[i]->get_data());
+            in_grad[i].emplace<tensor*>(input[i]->get_grad());
+        }
+
+        for (size_t i{0}; i < out_channels; i++) {
+            out_data[i].emplace<tensor*>(output[i]->get_data());
+            out_grad[i].emplace<tensor*>(output[i]->get_grad());
+        }
+
+    } else if (backend == core::backend_type::opencl) {
+        for (size_t i{0}; i < in_channels; i++) {
+            in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
+            in_grad[i].emplace<cl::Buffer*>(input[i]->get_grad_buffer());
+        }
+
+        for (size_t i{0}; i < out_channels; i++) {
+            out_data[i].emplace<cl::Buffer*>(output[i]->get_data_buffer());
+            out_grad[i].emplace<cl::Buffer*>(output[i]->get_grad_buffer());
+        }
     }
 
     backward_context.set_in_out(in_data, in_grad, out_data, out_grad);
     backward_context.set_engine(layer::engine());
 
-    backward_kernel->compute(backward_context);
+    backward_kernel->compute(backward_context, eng);
 }
 
 } // namespace yonn

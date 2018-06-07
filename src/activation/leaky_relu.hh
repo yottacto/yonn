@@ -4,6 +4,8 @@
 #include "util/util.hh"
 #include "tensor.hh"
 
+#include "core/kernel/opencl/leaky-relu.hh"
+
 namespace yonn
 {
 namespace activation
@@ -17,6 +19,21 @@ struct leaky_relu : layer
 
     // TODO explicit specify the dims
 
+    auto name() const -> std::string override
+    {
+        return "leaky relu layer";
+    }
+
+    auto kernel_code() const -> std::string
+    {
+        return opencl_kernel::leaky_relu_kernel_code;
+    }
+
+    auto nd_size() const -> size_t
+    {
+        return output_shape(0).size() * batch_size;
+    }
+
     auto fan_in_size() const -> size_t override
     {
         return input_shape(0).size();
@@ -27,8 +44,8 @@ struct leaky_relu : layer
         return output_shape(0).size();
     }
 
-    void forward_propagation() override;
-    void backward_propagation() override;
+    void forward_propagation(core::engine::engine_type& eng) override;
+    void backward_propagation(core::engine::engine_type& eng) override;
 
     void forward_activation(vec_t const& in, vec_t& out);
     void backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy);
@@ -37,7 +54,7 @@ struct leaky_relu : layer
     value_type epsilon;
 };
 
-void leaky_relu::forward_propagation()
+void leaky_relu::forward_propagation(core::engine::engine_type& eng)
 {
     // TODO init once
     // TODO const in data?
@@ -48,7 +65,7 @@ void leaky_relu::forward_propagation()
         forward_activation(in_data[sample], out_data[sample]);
 }
 
-void leaky_relu::backward_propagation()
+void leaky_relu::backward_propagation(core::engine::engine_type& eng)
 {
     tensor const& in_data  = *(input[0] ->get_data());
     tensor&       in_grad  = *(input[0] ->get_grad());

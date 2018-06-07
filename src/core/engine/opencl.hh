@@ -38,7 +38,11 @@ struct opencl
         queue = cl::CommandQueue{context, default_device};
     }
 
-    void init_kernel(std::string const& name, std::string const& kernel_code)
+    void init_kernel(
+        std::string const& name,
+        std::string const& kernel_code,
+        size_t nd_size
+    )
     {
         cl::Program::Sources sources;
 
@@ -59,7 +63,14 @@ struct opencl
             cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "backward")
         ));
 
-        // TODO eargs
+        forward_eargs.emplace(std::make_pair(
+            name,
+            cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
+        ));
+        backward_eargs.emplace(std::make_pair(
+            name,
+            cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
+        ));
     }
 
     std::vector<cl::Platform> all_platforms;

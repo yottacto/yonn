@@ -7,6 +7,8 @@
 #include "core/kernel/average-pooling-op.hh"
 #include "core/parameter/avg-pool-parameter.hh"
 
+#include "../core/kernel/opencl/average-pooling.hh"
+
 namespace yonn
 {
 
@@ -31,8 +33,8 @@ struct average_pooling_layer : layer
         ),
         // FIXME op_kernel need context to constrct, in fact in order to
         // specify device and layer's params
-        forward_kernel(new core::kernel::average_pooling_op(params)),
-        backward_kernel(new core::kernel::average_pooling_grad_op(params))
+        forward_kernel(new core::kernel::average_pooling_op(params, name())),
+        backward_kernel(new core::kernel::average_pooling_grad_op(params, name()))
     {
         in_shapes.emplace_back(params.in.size(), 1, 1);
         in_shapes.emplace_back(params.in.size(), 1, 1);
@@ -84,6 +86,21 @@ struct average_pooling_layer : layer
         stride
     ) {}
 
+    auto name() const -> std::string override
+    {
+        return "average pooling layer";
+    }
+
+    auto kernel_code() const -> std::string
+    {
+        return opencl_kernel::avg_pool_kernel_code;
+    }
+
+    auto nd_size() const -> size_t
+    {
+        return output_shape(0).size() * batch_size;
+    }
+
     auto fan_in_size() const -> size_t override
     {
         return params.pool_width * params.pool_height;
@@ -96,8 +113,13 @@ struct average_pooling_layer : layer
             * (params.pool_height / params.stride);
     }
 
-    void forward_propagation() override;
-    void backward_propagation() override;
+    void init_engine(
+        core::backend_type const& backend,
+        core::engine::engine_type& eng
+    ) override;
+
+    void forward_propagation(core::engine::engine_type& eng) override;
+    void backward_propagation(core::engine::engine_type& eng) override;
 
 // TODO uncomment
 // private:
@@ -108,42 +130,92 @@ struct average_pooling_layer : layer
     std::shared_ptr<core::framework::op_kernel> backward_kernel;
 };
 
-void average_pooling_layer::forward_propagation()
+void average_pooling_layer::init_engine(
+    core::backend_type const& backend,
+    core::engine::engine_type& eng
+)
+{
+    // this backend cannot be network_default
+    if (this->backend == core::backend_type::network_default)
+        layer::set_engine(backend);
+
+    // internal is inited in ctor
+    if (backend == core::backend_type::opencl) {
+        auto const& e = std::get<core::engine::opencl>(eng);
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1), e.context);
+        input[2] = std::make_shared<edge>(input_shape(2), e.context);
+
+        output[0] = std::make_shared<edge>();
+    }
+}
+
+void average_pooling_layer::forward_propagation(core::engine::engine_type& eng)
 {
     // TODO init once
     // TODO const in data?
-    std::vector<tensor*> in_data(in_channels);
-    for (size_t i{0}; i < in_channels; i++)
-        in_data[i] = input[i]->get_data();
-    std::vector<tensor*> out_data(out_channels);
-    for (size_t i{0}; i < out_channels; i++)
-        out_data[i] = output[i]->get_data();
+    using data_type = std::variant<tensor*, cl::Buffer*>;
+    std::vector<data_type> in_data(in_channels);
+    std::vector<data_type> out_data(out_channels);
+    auto const& backend = layer::engine();
+    if (backend == core::backend_type::internal) {
+        for (size_t i{0}; i < in_channels; i++)
+            in_data[i].emplace<tensor*>(input[i]->get_data());
+
+        for (size_t i{0}; i < out_channels; i++)
+            out_data[i].emplace<tensor*>(output[i]->get_data());
+
+    } else if (backend == core::backend_type::opencl) {
+        for (size_t i{0}; i < in_channels; i++)
+            in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
+
+        for (size_t i{0}; i < out_channels; i++)
+            out_data[i].emplace<cl::Buffer*>(output[i]->get_data_buffer());
+    }
 
     forward_context.set_in_out(in_data, out_data);
     forward_context.set_engine(layer::engine());
 
-    forward_kernel->compute(forward_context);
+    forward_kernel->compute(forward_context, eng);
 }
 
-void average_pooling_layer::backward_propagation()
+void average_pooling_layer::backward_propagation(core::engine::engine_type& eng)
 {
-    std::vector<tensor*> in_data(in_channels);
-    std::vector<tensor*> in_grad(in_channels);
-    for (size_t i{0}; i < in_channels; i++) {
-        in_data[i] = input[i]->get_data();
-        in_grad[i] = input[i]->get_grad();
-    }
-    std::vector<tensor*> out_data(out_channels);
-    std::vector<tensor*> out_grad(out_channels);
-    for (size_t i{0}; i < out_channels; i++) {
-        out_data[i] = output[i]->get_data();
-        out_grad[i] = output[i]->get_grad();
+
+    using data_type = std::variant<tensor*, cl::Buffer*>;
+    std::vector<data_type> in_data(in_channels);
+    std::vector<data_type> in_grad(in_channels);
+    std::vector<data_type> out_data(out_channels);
+    std::vector<data_type> out_grad(out_channels);
+
+    auto const& backend = layer::engine();
+    if (backend == core::backend_type::internal) {
+        for (size_t i{0}; i < in_channels; i++) {
+            in_data[i].emplace<tensor*>(input[i]->get_data());
+            in_grad[i].emplace<tensor*>(input[i]->get_grad());
+        }
+
+        for (size_t i{0}; i < out_channels; i++) {
+            out_data[i].emplace<tensor*>(output[i]->get_data());
+            out_grad[i].emplace<tensor*>(output[i]->get_grad());
+        }
+
+    } else if (backend == core::backend_type::opencl) {
+        for (size_t i{0}; i < in_channels; i++) {
+            in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
+            in_grad[i].emplace<cl::Buffer*>(input[i]->get_grad_buffer());
+        }
+
+        for (size_t i{0}; i < out_channels; i++) {
+            out_data[i].emplace<cl::Buffer*>(output[i]->get_data_buffer());
+            out_grad[i].emplace<cl::Buffer*>(output[i]->get_grad_buffer());
+        }
     }
 
     backward_context.set_in_out(in_data, in_grad, out_data, out_grad);
     backward_context.set_engine(layer::engine());
 
-    backward_kernel->compute(backward_context);
+    backward_kernel->compute(backward_context, eng);
 }
 
 } // namespace yonn

@@ -44,7 +44,10 @@ struct sequential : nodes<sequential>
         if (l.engine() != backend)
             united_backend = false;
 
-        eng.init_kernel(l.name());
+        if (l.engine() == core::backend_type::opencl) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            e.init_kernel(l.name(), l.kernel_code(), l.nd_size());
+        }
 
         if (all_nodes.size() != 1) {
             connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
@@ -109,7 +112,7 @@ void sequential::backward(tensor const& first)
     own_nodes.back()->set_output_grad(first);
 
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
-        (*l)->backward();
+        (*l)->backward(eng);
 }
 
 void sequential::update_weight(optimizer::optimizer* opt)

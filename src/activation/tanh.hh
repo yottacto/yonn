@@ -4,6 +4,8 @@
 #include "util/util.hh"
 #include "tensor.hh"
 
+#include "core/kernel/opencl/tanh.hh"
+
 namespace yonn
 {
 namespace activation
@@ -13,6 +15,21 @@ struct tanh : layer
 {
     tanh() : layer({data_type::data}, {data_type::data}) {}
     // TODO explicit specify the dims
+
+    auto name() const -> std::string override
+    {
+        return "tanh layer";
+    }
+
+    auto kernel_code() const -> std::string
+    {
+        return opencl_kernel::tanh_kernel_code;
+    }
+
+    auto nd_size() const -> size_t
+    {
+        return output_shape(0).size() * batch_size;
+    }
 
     auto fan_in_size() const -> size_t override
     {
@@ -24,14 +41,14 @@ struct tanh : layer
         return output_shape(0).size();
     }
 
-    void forward_propagation() override;
-    void backward_propagation() override;
+    void forward_propagation(core::engine::engine_type& eng) override;
+    void backward_propagation(core::engine::engine_type& eng) override;
 
     void forward_activation(vec_t const& in, vec_t& out);
     void backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy);
 };
 
-void tanh::forward_propagation()
+void tanh::forward_propagation(core::engine::engine_type& eng)
 {
     // TODO init once
     // TODO const in data?
@@ -42,7 +59,7 @@ void tanh::forward_propagation()
         forward_activation(in_data[sample], out_data[sample]);
 }
 
-void tanh::backward_propagation()
+void tanh::backward_propagation(core::engine::engine_type& eng)
 {
     tensor const& in_data  = *(input[0] ->get_data());
     tensor&       in_grad  = *(input[0] ->get_grad());

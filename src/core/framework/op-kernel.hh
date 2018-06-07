@@ -91,6 +91,7 @@ struct op_kernel_context
     std::vector<data_type>* out_data;
     std::vector<data_type>* in_grad;
     std::vector<data_type>* out_grad;
+    std::unordered_map<std::string, data_type> extra;
 };
 
 struct op_kernel

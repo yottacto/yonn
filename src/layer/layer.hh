@@ -82,6 +82,7 @@ struct layer : node
     size_t in_channels;
     size_t out_channels;
     core::backend_type backend;
+    size_t batch_size;
 };
 
 // auto& operator<<(layer& lhs, layer& rhs)
@@ -109,6 +110,7 @@ inline void connect(
 // implentation of layer
 void layer::allocate_nsamples(size_t batch_size)
 {
+    this->batch_size = batch_size;
     // backend must be internal
     if (backend == core::backend_type::internal) {
         input[0]->allocate_nsamples(batch_size, input_shape(0));
@@ -119,6 +121,7 @@ void layer::allocate_nsamples(size_t batch_size)
 template <class Context>
 void layer::allocate_nsamples(size_t batch_size, Context const& context)
 {
+    this->batch_size = batch_size;
     if (backend == core::backend_type::internal) {
         input[0]->allocate_nsamples(batch_size, input_shape(0));
         output[0]->allocate_nsamples(batch_size, output_shape(0));
