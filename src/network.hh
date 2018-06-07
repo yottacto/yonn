@@ -19,6 +19,13 @@ struct network
 {
     using network_type = Net;
 
+    network() = default;
+
+    network(core::backend_type backend)
+        : backend{backend}, net{backend}
+    {
+    }
+
     void allocate_nsamples(size_t batch_size)
     {
         net.allocate_nsamples(batch_size);
@@ -115,6 +122,7 @@ struct network
 
 // TODO uncomment
 // private:
+    core::backend_type backend;
     network_type net;
     tensor in_batch;
     std::vector<label_t> desired_out_batch;

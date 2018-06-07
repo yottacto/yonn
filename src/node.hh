@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <CL/cl.hpp>
 #include "tensor.hh"
 #include "type.hh"
 
@@ -36,10 +37,30 @@ struct edge
     {
     }
 
+    template <class Context>
+    edge(shape3d_t shape, Context const& context) :
+        data(1, vec_t(shape.size())),
+        grad(1, vec_t(shape.size()))
+    {
+        auto bsize = sizeof(value_type) * shape.size();
+        data_buffer = cl::Buffer(context, CL_MEM_READ_WRITE, bsize);
+        grad_buffer = cl::Buffer(context, CL_MEM_READ_WRITE, bsize);
+    }
+
     void allocate_nsamples(size_t batch_size, shape3d_t shape)
     {
         data.resize(batch_size, vec_t(shape.size()));
         grad.resize(batch_size, vec_t(shape.size()));
+    }
+
+    template <class Context>
+    void allocate_nsamples(size_t batch_size, shape3d_t shape, Context const& context)
+    {
+        auto bsize = sizeof(value_type) * batch_size * shape.size();
+        data.resize(batch_size, vec_t(shape.size()));
+        grad.resize(batch_size, vec_t(shape.size()));
+        data_buffer = cl::Buffer(context, CL_MEM_READ_WRITE, bsize);
+        grad_buffer = cl::Buffer(context, CL_MEM_READ_WRITE, bsize);
     }
 
     auto get_data() -> tensor* { return &data; }
@@ -59,6 +80,9 @@ struct edge
 
     tensor data;
     tensor grad;
+    cl::Buffer data_buffer;
+    cl::Buffer grad_buffer;
+
     std::weak_ptr<node> prev;
     std::weak_ptr<node> next;
 };

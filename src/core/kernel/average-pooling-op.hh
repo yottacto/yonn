@@ -23,7 +23,7 @@ struct average_pooling_op : framework::op_kernel
     {
         auto const engine = context.engine();
 
-        if (engine == core::backend::internal) {
+        if (engine == core::backend_type::internal) {
             tensor const& in_data = context.input(0);
             tensor const& w       = context.input(1);
             tensor const& bias    = context.input(2);
@@ -32,7 +32,7 @@ struct average_pooling_op : framework::op_kernel
             average_pooling_op_internal(
                 in_data, w[0], bias[0], out_data, params
             );
-        } else if (engine == core::backend::opencl) {
+        } else if (engine == core::backend_type::opencl) {
         } else {
             // TODO not support backend engine
         }
@@ -53,7 +53,7 @@ struct average_pooling_grad_op : framework::op_kernel
     {
         auto const engine = context.engine();
 
-        if (engine == core::backend::internal) {
+        if (engine == core::backend_type::internal) {
             tensor const& in_data = context.input(0);
             tensor const& w       = context.input(1);
             tensor& dw            = context.input_grad(1);
@@ -64,7 +64,7 @@ struct average_pooling_grad_op : framework::op_kernel
             average_pooling_op_internal(
                 in_data, w, dw, db, dout, dx, params
             );
-        } else if (engine == core::backend::opencl) {
+        } else if (engine == core::backend_type::opencl) {
         } else {
             // TODO not support backend engine
         }

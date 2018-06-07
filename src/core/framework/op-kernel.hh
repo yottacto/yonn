@@ -38,8 +38,8 @@ struct op_kernel_context
         out_grad = &_out_grad;
     }
 
-    auto engine() const -> core::backend { return backend; }
-    auto set_engine(core::backend engine) { backend = engine; }
+    auto engine() const -> core::backend_type { return backend; }
+    auto set_engine(core::backend_type engine) { backend = engine; }
     auto input(size_t index)       -> tensor&       { return *(*in_data)[index]; }
     auto input(size_t index) const -> tensor const& { return *(*in_data)[index]; }
     auto output(size_t index)       -> tensor&       { return *(*out_data)[index]; }
@@ -52,7 +52,7 @@ struct op_kernel_context
 
 // TODO uncomment
 // private:
-    core::backend backend;
+    core::backend_type backend;
     std::vector<tensor*>* in_data;
     std::vector<tensor*>* out_data;
     std::vector<tensor*>* in_grad;

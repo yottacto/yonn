@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <variant>
 #include "type.hh"
 
 namespace yonn

@@ -7,6 +7,7 @@
 #include "nodes.hh"
 #include "tensor.hh"
 #include "optimizer/optimizer.hh"
+#include "core/backend.hh"
 
 namespace yonn
 {
@@ -15,10 +16,34 @@ namespace topo
 
 struct sequential : nodes<sequential>
 {
+    sequential() = default;
+    sequential(core::backend_type backend)
+        : backend{backend}
+    {
+        if (backend == core::backend_type::internal)
+            ;
+        else if (backend == core::backend_type::opencl) {
+            eng.emplace<core::engine::opencl>();
+        } else {
+            // TODO unsupported backend or network backend cannot be
+            // network_default
+        }
+    }
+
+
     template <class Layer>
     void add(Layer&& l)
     {
         emplace_back(std::forward<Layer>(l));
+
+        if (l.engine() == core::backend_type::network_default)
+            l.init_engine(backend, eng);
+        else
+            l.init_engine(l.engine(), eng);
+
+        if (l.engine() != backend)
+            united_backend = false;
+
         if (all_nodes.size() != 1) {
             connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
         }
@@ -42,12 +67,24 @@ struct sequential : nodes<sequential>
             std::cerr << l->output[0]->data[0].size() << "\n";
         }
     }
+
+// TODO uncoment this
+// private:
+    core::backend_type backend;
+    core::engine::engine_type eng;
+    bool united_backend{true};
 };
 
 void sequential::allocate_nsamples(size_t batch_size)
 {
-    for (auto const& l : all_nodes)
-        l->allocate_nsamples(batch_size);
+    if (backend == core::backend_type::internal) {
+        for (auto const& l : all_nodes)
+            l->allocate_nsamples(batch_size);
+    } else if (backend == core::backend_type::opencl) {
+        auto const& e = std::get<core::engine::opencl>(eng);
+        for (auto const& l : all_nodes)
+            l->allocate_nsamples(batch_size, e.context);
+    }
 }
 
 auto sequential::forward(tensor const& first) -> tensor

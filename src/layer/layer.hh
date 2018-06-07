@@ -14,7 +14,7 @@ struct layer : node
     layer(
         std::vector<data_type> const& in_types,
         std::vector<data_type> const& out_types,
-        core::backend backend = core::backend::internal
+        core::backend_type backend = core::backend_type::internal
     ) : node(in_types.size(), out_types.size()),
         in_types{in_types}, out_types{out_types},
         in_channels(in_types.size()), out_channels(out_types.size()),
@@ -31,10 +31,21 @@ struct layer : node
     virtual void backward_propagation() = 0;
 
     void allocate_nsamples(size_t batch_size);
+
+    template <class Context>
+    void allocate_nsamples(size_t batch_size, Context const& context);
+
     void allocate_output();
     void allocate_input(shape3d_t const& shape);
 
-    auto engine() const -> core::backend { return backend; }
+    // FIXME make this pure virtual
+    virtual void init_engine(
+        core::backend_type const& backend,
+        core::engine::engine_type& eng
+    );
+
+    auto engine() const -> core::backend_type { return backend; }
+    void set_engine(core::backend_type const& backend) { this->backend = backend; }
 
     void forward() { forward_propagation(); }
     void backward() { backward_propagation(); }
@@ -69,7 +80,7 @@ struct layer : node
     std::vector<shape3d_t> out_shapes;
     size_t in_channels;
     size_t out_channels;
-    core::backend backend;
+    core::backend_type backend;
 };
 
 // auto& operator<<(layer& lhs, layer& rhs)
@@ -97,8 +108,25 @@ inline void connect(
 // implentation of layer
 void layer::allocate_nsamples(size_t batch_size)
 {
-    input[0]->allocate_nsamples(batch_size, input_shape(0));
-    output[0]->allocate_nsamples(batch_size, output_shape(0));
+    // backend must be internal
+    if (backend == core::backend_type::internal) {
+        input[0]->allocate_nsamples(batch_size, input_shape(0));
+        output[0]->allocate_nsamples(batch_size, output_shape(0));
+    }
+}
+
+template <class Context>
+void layer::allocate_nsamples(size_t batch_size, Context const& context)
+{
+    if (backend == core::backend_type::internal) {
+        input[0]->allocate_nsamples(batch_size, input_shape(0));
+        output[0]->allocate_nsamples(batch_size, output_shape(0));
+    } else if (backend == core::backend_type::opencl) {
+        input[0]->allocate_nsamples(batch_size, input_shape(0), context);
+        output[0]->allocate_nsamples(batch_size, output_shape(0), context);
+    } else {
+        // TODO error or currently not supportted backend
+    }
 }
 
 void layer::allocate_output()

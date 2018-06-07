@@ -23,7 +23,7 @@ struct convolutional_op : framework::op_kernel
     {
         auto const engine = context.engine();
 
-        if (engine == core::backend::internal) {
+        if (engine == core::backend_type::internal) {
             tensor const& in_data = context.input(0);
             tensor const& w       = context.input(1);
             // TODO params to specify has_bias, using pointer and nullptr
@@ -33,7 +33,7 @@ struct convolutional_op : framework::op_kernel
             convolutional_op_internal(
                 in_data, w[0], bias[0], out_data, params
             );
-        } else if (engine == core::backend::opencl) {
+        } else if (engine == core::backend_type::opencl) {
         } else {
             // TODO not support backend engine
         }
@@ -55,7 +55,7 @@ struct convolutional_grad_op : framework::op_kernel
     {
         auto const engine = context.engine();
 
-        if (engine == core::backend::internal) {
+        if (engine == core::backend_type::internal) {
             tensor const& in_data = context.input(0);
             tensor const& w       = context.input(1);
             tensor& dw            = context.input_grad(1);
@@ -67,7 +67,7 @@ struct convolutional_grad_op : framework::op_kernel
             convolutional_op_internal(
                 in_data, w[0], dw, db, dout, dx, params
             );
-        } else if (engine == core::backend::opencl) {
+        } else if (engine == core::backend_type::opencl) {
         } else {
             // TODO not support backend engine
         }

@@ -25,7 +25,7 @@ struct convolutional_layer : layer
         bool has_bias,
         size_t w_stride,
         size_t h_stride,
-        core::backend backend
+        core::backend_type backend
     );
 
     convolutional_layer(
@@ -38,7 +38,7 @@ struct convolutional_layer : layer
         bool has_bias,
         size_t w_stride,
         size_t h_stride,
-        core::backend backend
+        core::backend_type backend
     );
 
     convolutional_layer(
@@ -52,7 +52,7 @@ struct convolutional_layer : layer
         bool has_bias,          // = true,
         size_t w_stride,        // = 1,
         size_t h_stride,        // = 1,
-        core::backend backend   // = core::default_engine()
+        core::backend_type backend   // = core::default_engine()
     );
 
     auto fan_in_size() const -> size_t override
@@ -65,6 +65,11 @@ struct convolutional_layer : layer
         return (params.weight.width/params.w_stride)
             * (params.weight.height/params.h_stride) * params.out.depth;
     }
+
+    void init_engine(
+        core::backend_type const& backend,
+        core::engine::engine_type& eng
+    ) override;
 
     void forward_propagation() override;
     void backward_propagation() override;
@@ -90,7 +95,7 @@ convolutional_layer::convolutional_layer(
     bool has_bias = true,
     size_t w_stride = 1,
     size_t h_stride = 1,
-    core::backend backend = core::default_engine()
+    core::backend_type backend = core::default_engine()
 ) :
     layer(std_input_types(has_bias), {data_type::data}),
     params(
@@ -132,18 +137,18 @@ convolutional_layer::convolutional_layer(
         out_channels
     );
 
-    // invariant, all input channels allocated in constructor
-    // TODO reasoning about this input_shape
-    input[0] = std::make_shared<edge>();
-    input[1] = std::make_shared<edge>(input_shape(1));
-    input[2] = std::make_shared<edge>(input_shape(2));
-
-    output[0] = std::make_shared<edge>();
-
     // TODO init different kernel
-    if (backend == core::backend::internal)
-        ;
-    else {
+    if (backend == core::backend_type::internal) {
+        // invariant, all input channels allocated in constructor
+        // TODO reasoning about this input_shape
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1));
+        input[2] = std::make_shared<edge>(input_shape(2));
+
+        output[0] = std::make_shared<edge>();
+    } else if (backend == core::backend_type::opencl) {
+        // wait for opencl context, init in init_engine
+    } else {
     }
 
     // TODO init weight
@@ -162,7 +167,7 @@ convolutional_layer::convolutional_layer(
     bool has_bias = true,
     size_t w_stride = 1,
     size_t h_stride = 1,
-    core::backend backend = core::default_engine()
+    core::backend_type backend = core::default_engine()
 ) :
     convolutional_layer(
         in_width,    in_height,
@@ -188,7 +193,7 @@ convolutional_layer::convolutional_layer(
     bool has_bias = true,
     size_t w_stride = 1,
     size_t h_stride = 1,
-    core::backend backend = core::default_engine()
+    core::backend_type backend = core::default_engine()
 ) :
     convolutional_layer(
         in_width,    in_height,
@@ -201,6 +206,26 @@ convolutional_layer::convolutional_layer(
         backend
     )
 {
+}
+
+void convolutional_layer::init_engine(
+    core::backend_type const& backend,
+    core::engine::engine_type& eng
+)
+{
+    // this backend cannot be network_default
+    if (this->backend == core::backend_type::network_default)
+        layer::set_engine(backend);
+
+    // internal is inited in ctor
+    if (backend == core::backend_type::opencl) {
+        auto const& e = std::get<core::engine::opencl>(eng);
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1), e.context);
+        input[2] = std::make_shared<edge>(input_shape(2), e.context);
+
+        output[0] = std::make_shared<edge>();
+    }
 }
 
 void convolutional_layer::forward_propagation()
