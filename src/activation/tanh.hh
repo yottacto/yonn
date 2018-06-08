@@ -41,12 +41,39 @@ struct tanh : layer
         return output_shape(0).size();
     }
 
+    void init_engine(
+        core::backend_type const& backend,
+        core::engine::engine_type& eng
+    ) override;
+
     void forward_propagation(core::engine::engine_type& eng) override;
     void backward_propagation(core::engine::engine_type& eng) override;
 
     void forward_activation(vec_t const& in, vec_t& out);
     void backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy);
 };
+
+// FIXME this is copy from conv
+void tanh::init_engine(
+    core::backend_type const& backend,
+    core::engine::engine_type& eng
+)
+{
+    // this backend cannot be network_default
+    if (this->backend == core::backend_type::network_default)
+        layer::set_engine(backend);
+
+    // internal is inited in ctor
+    if (backend == core::backend_type::opencl) {
+        auto const& e = std::get<core::engine::opencl>(eng);
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1), e.context);
+        input[2] = std::make_shared<edge>(input_shape(2), e.context);
+
+        output[0] = std::make_shared<edge>();
+    }
+}
+
 
 void tanh::forward_propagation(core::engine::engine_type& eng)
 {

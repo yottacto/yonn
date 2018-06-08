@@ -43,7 +43,7 @@ struct layer : node
     virtual void init_engine(
         core::backend_type const& backend,
         core::engine::engine_type& eng
-    );
+    ) = 0;
 
     auto engine() const -> core::backend_type { return backend; }
     void set_engine(core::backend_type const& backend) { this->backend = backend; }
