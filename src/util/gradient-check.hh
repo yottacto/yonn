@@ -4,6 +4,8 @@
 #include "tensor.hh"
 #include "util.hh"
 
+#include "core/backend.hh"
+
 namespace yonn
 {
 
@@ -36,16 +38,16 @@ inline auto relative_error(tensor const& std, tensor const& num)
 
 template <class Layer>
 inline auto gradient_check(
-    Layer& l, std::vector<tensor> in, tensor const& dout,
+    Layer& l, std::vector<tensor> in, tensor const& dout, core::engine::opencl& e,
     value_type h = 1e-6
 )
 {
-    l.set_input_data(in);
-    l.forward();
+    l.set_input_data(in, e);
+    l.forward(e, false);
     // auto std_out = sum(l.get_output_data());
 
-    l.set_output_grad(dout);
-    l.backward();
+    l.set_output_grad(dout, e);
+    l.backward(e, false);
     auto std_grad = l.get_input_grad();
     auto numeric_grad = std_grad;
 
@@ -55,13 +57,13 @@ inline auto gradient_check(
         auto& v = in[ti][vi][i];
         auto old = v;
         v = old + h;
-        l.set_input_data(in);
-        l.forward();
+        l.set_input_data(in, e);
+        l.forward(e, false);
         auto pos_out = l.get_output_data();
 
         v = old - h;
-        l.set_input_data(in);
-        l.forward();
+        l.set_input_data(in, e);
+        l.forward(e, false);
         auto neg_out = l.get_output_data();
 
         auto res = ((pos_out - neg_out) / (2. * h));

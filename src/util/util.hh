@@ -112,6 +112,16 @@ auto tensor_to_vector(tensor const& in) -> vec_t
     return ret;
 }
 
+// TODO assume v.size() equal to sum of t[i].size()
+void vector_to_tensor(vec_t const& v, tensor& t)
+{
+    auto it = std::begin(v);
+    for (auto& vi : t) {
+        std::copy(it, it + vi.size(), std::begin(vi));
+        it += v.size();
+    }
+}
+
 namespace compute
 {
 
