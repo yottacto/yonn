@@ -90,7 +90,7 @@ void sequential::allocate_nsamples(size_t batch_size)
 
 auto sequential::forward(tensor const& first) -> tensor
 {
-    all_nodes.front()->set_input_data(first);
+    all_nodes.front()->set_input_data(first, eng);
 
     for (auto const& l : all_nodes)
         l->forward(eng, united_backend);

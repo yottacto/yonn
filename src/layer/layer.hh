@@ -57,8 +57,8 @@ struct layer : node
     void forward(core::engine::engine_type& eng, bool united_backend = true) { forward_propagation(eng, united_backend); }
     void backward(core::engine::engine_type& eng, bool united_backend = true) { backward_propagation(eng, united_backend); }
 
-    void set_input_data(std::vector<tensor> const& input);
-    void set_input_data(tensor const& input);
+    void set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng);
+    void set_input_data(tensor const& input, core::engine::engine_type& eng);
     void set_output_grad(tensor const& grad);
     void output_data(tensor& out);
     auto get_input_data(size_t i) -> tensor&;
@@ -141,17 +141,28 @@ void layer::allocate_input(shape3d_t const& shape)
     input[0] = std::make_shared<edge>();
 }
 
-void layer::set_input_data(std::vector<tensor> const& input)
+// TODO deprecated?
+void layer::set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng)
 {
-    for (auto i = 0u; i < input.size(); i++)
-        this->input[i]->data = input[i];
+    ignore(eng);
+
+    if (backend == core::backend_type::internal) {
+        for (auto i = 0u; i < input.size(); i++)
+            this->input[i]->data = input[i];
+    } else if (backend == core::backend_type::opencl) {
+        // TODO
+    }
 }
 
-void layer::set_input_data(tensor const& input)
+void layer::set_input_data(tensor const& input, core::engine::engine_type& eng)
 {
-    // TODO assume all needed memory allocated and for opencl need to
-    // deal with seperately
-    this->input[0]->data = input;
+    if (backend == core::backend_type::internal) {
+        this->input[0]->data = input;
+    } else if (backend == core::backend_type::opencl){
+        auto& e = std::get<core::engine::opencl>(eng);
+        this->input[0]->set_data(tensor_to_vector(input), e);
+        // TODO
+    }
 }
 
 void layer::set_output_grad(tensor const& grad)

@@ -4,6 +4,8 @@
 #include "tensor.hh"
 #include "type.hh"
 
+#include "core/backend.hh"
+
 namespace yonn
 {
 
@@ -67,6 +69,12 @@ struct edge
     auto get_grad() -> tensor* { return &grad; }
     auto get_data_buffer() -> cl::Buffer* { return &data_buffer; }
     auto get_grad_buffer() -> cl::Buffer* { return &grad_buffer; }
+
+    void set_data(vec_t const& v, core::engine::opencl& e)
+    {
+        auto const bsize = sizeof(value_type) * v.size();
+        e.queue.enqueueWriteBuffer(data_buffer, CL_TRUE, 0, bsize, v.data());
+    }
 
     // merge all grads to grad[0]
     void merge_grads()

@@ -95,6 +95,23 @@ void ignore(T&&)
 {
 }
 
+auto tensor_to_vector(tensor const& in) -> vec_t
+{
+    auto size = 0;
+    for (auto const& v : in)
+        size += v.size();
+    vec_t ret(size);
+    auto it = std::begin(ret);
+    for (auto i = 0u; i < in.size(); it += in[i++].size()) {
+        std::copy(
+            std::begin(in[i]),
+            std::end(in[i]),
+            it
+        );
+    }
+    return ret;
+}
+
 namespace compute
 {
 
