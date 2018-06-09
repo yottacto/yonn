@@ -15,7 +15,7 @@ std::string const COLOR_RST{"\e[0m"};
 std::string const COLOR_ACT{"\e[1;32m"};
 std::string const COLOR_ARG{"\e[1;35m"};
 
-using value_type = float;
+using value_type = double;
 using vec_t = std::vector<value_type>;
 
 auto inline operator/(vec_t const& lhs, value_type rhs)
@@ -29,7 +29,7 @@ auto inline operator/(vec_t const& lhs, value_type rhs)
 }
 
 // TODO unsigned int or unsigned long
-using size_t = unsigned int;
+using size_t = unsigned long;
 
 using label_t = size_t;
 
