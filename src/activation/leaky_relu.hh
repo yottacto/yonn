@@ -84,6 +84,9 @@ void leaky_relu::init_engine(
 
 void leaky_relu::forward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
+    ignore(eng);
+    ignore(united_backend);
+
     // TODO init once
     // TODO const in data?
     tensor const& in_data  = *(input[0] ->get_data());
@@ -95,6 +98,9 @@ void leaky_relu::forward_propagation(core::engine::engine_type& eng, bool united
 
 void leaky_relu::backward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
+    ignore(eng);
+    ignore(united_backend);
+
     tensor const& in_data  = *(input[0] ->get_data());
     tensor&       in_grad  = *(input[0] ->get_grad());
     tensor const& out_data = *(output[0]->get_data());

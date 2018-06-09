@@ -21,8 +21,11 @@ struct average_pooling_op : framework::op_kernel
     {
     }
 
-    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng) override
+    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng, bool united_backend = true) override
     {
+        ignore(eng);
+        ignore(united_backend);
+
         auto const engine = context.engine();
 
         if (engine == core::backend_type::internal) {
@@ -54,8 +57,11 @@ struct average_pooling_grad_op : framework::op_kernel
     {
     }
 
-    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng) override
+    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng, bool united_backend = true) override
     {
+        ignore(eng);
+        ignore(united_backend);
+
         auto const engine = context.engine();
 
         if (engine == core::backend_type::internal) {

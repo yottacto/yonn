@@ -6,6 +6,8 @@
 #include "type.hh"
 #include "optimizer/optimizer.hh"
 
+#include "util/util.hh"
+
 namespace yonn
 {
 
@@ -33,8 +35,12 @@ struct layer : node
 
     void allocate_nsamples(size_t batch_size);
 
-    // TODO non pure virtual
-    virtual void allocate_nsamples(size_t batch_size, core::engine::opencl& e);
+    virtual void allocate_nsamples(size_t batch_size, core::engine::opencl& e)
+    {
+        // in case the layer doesnt support opencl backend
+        ignore(batch_size);
+        ignore(e);
+    }
 
     void allocate_output();
     void allocate_input(shape3d_t const& shape);

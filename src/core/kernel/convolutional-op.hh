@@ -57,8 +57,11 @@ struct convolutional_op : framework::op_kernel
         this->sample_count = sample_count;
     }
 
-    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng) override
+    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng, bool united_backend) override
     {
+        ignore(eng);
+        ignore(united_backend);
+
         auto const engine = context.engine();
 
         if (engine == core::backend_type::internal) {
@@ -164,8 +167,11 @@ struct convolutional_grad_op : framework::op_kernel
         this->sample_count = sample_count;
     }
 
-    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng) override
+    void compute(framework::op_kernel_context& context, core::engine::engine_type& eng, bool united_backend = true) override
     {
+        ignore(eng);
+        ignore(united_backend);
+
         auto const engine = context.engine();
 
         if (engine == core::backend_type::internal) {
@@ -183,14 +189,12 @@ struct convolutional_grad_op : framework::op_kernel
             );
         } else if (engine == core::backend_type::opencl) {
             using data_type = cl::Buffer;
-            data_type& in_data  = *std::get<data_type*>(context.input(0));
-            data_type& w        = *std::get<data_type*>(context.input(1));
-            data_type& bias     = *std::get<data_type*>(context.input(2));
-            data_type& out_data = *std::get<data_type*>(context.output(0));
-            data_type& dw        = *std::get<data_type*>(context.input_grad(1));
-            data_type& db        = *std::get<data_type*>(context.input_grad(2));
-            data_type& dx        = *std::get<data_type*>(context.input_grad(0));
-            data_type& dout        = *std::get<data_type*>(context.output_grad(0));
+            data_type& in_data = *std::get<data_type*>(context.input(0));
+            data_type& w       = *std::get<data_type*>(context.input(1));
+            data_type& dw      = *std::get<data_type*>(context.input_grad(1));
+            data_type& db      = *std::get<data_type*>(context.input_grad(2));
+            data_type& dx      = *std::get<data_type*>(context.input_grad(0));
+            data_type& dout    = *std::get<data_type*>(context.output_grad(0));
 
             (*bk_dx)(*bk_dx_eargs,
                 sample_count,

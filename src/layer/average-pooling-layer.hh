@@ -176,7 +176,7 @@ void average_pooling_layer::forward_propagation(core::engine::engine_type& eng, 
     forward_context.set_in_out(in_data, out_data);
     forward_context.set_engine(layer::engine());
 
-    forward_kernel->compute(forward_context, eng);
+    forward_kernel->compute(forward_context, eng, united_backend);
 }
 
 void average_pooling_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend)
@@ -215,7 +215,7 @@ void average_pooling_layer::backward_propagation(core::engine::engine_type& eng,
     backward_context.set_in_out(in_data, in_grad, out_data, out_grad);
     backward_context.set_engine(layer::engine());
 
-    backward_kernel->compute(backward_context, eng);
+    backward_kernel->compute(backward_context, eng, united_backend);
 }
 
 } // namespace yonn

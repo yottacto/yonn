@@ -86,8 +86,8 @@ struct fully_connected_layer : layer
     core::fully_parameter params;
     core::framework::op_kernel_context forward_context;
     core::framework::op_kernel_context backward_context;
-    std::shared_ptr<core::framework::op_kernel> forward_kernel;
-    std::shared_ptr<core::framework::op_kernel> backward_kernel;
+    std::unique_ptr<core::kernel::fully_connected_op> forward_kernel;
+    std::unique_ptr<core::kernel::fully_connected_grad_op> backward_kernel;
 };
 
 void fully_connected_layer::init_engine(
@@ -108,6 +108,8 @@ void fully_connected_layer::init_engine(
         input[2] = std::make_shared<edge>(input_shape(2), e.context);
 
         output[0] = std::make_shared<edge>();
+
+        // TODO
     }
 }
 
@@ -136,7 +138,7 @@ void fully_connected_layer::forward_propagation(core::engine::engine_type& eng, 
     }
 
 
-    forward_kernel->compute(forward_context, eng);
+    forward_kernel->compute(forward_context, eng, united_backend);
 }
 
 void fully_connected_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend)
@@ -174,7 +176,7 @@ void fully_connected_layer::backward_propagation(core::engine::engine_type& eng,
     backward_context.set_in_out(in_data, in_grad, out_data, out_grad);
     backward_context.set_engine(layer::engine());
 
-    backward_kernel->compute(backward_context, eng);
+    backward_kernel->compute(backward_context, eng, united_backend);
 }
 
 } // namespace yonn

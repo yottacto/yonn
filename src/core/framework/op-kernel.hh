@@ -100,7 +100,11 @@ struct op_kernel
 
     virtual ~op_kernel() = default;
 
-    virtual void compute(op_kernel_context& context, core::engine::engine_type& eng) = 0;
+    virtual void compute(
+        op_kernel_context& context,
+        core::engine::engine_type& eng,
+        bool united_backend
+    ) = 0;
 
 // TODO uncomment
 // protected:
