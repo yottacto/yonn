@@ -76,6 +76,28 @@ struct edge
         e.queue.enqueueWriteBuffer(data_buffer, CL_TRUE, 0, bsize, v.data());
     }
 
+    void set_grad(vec_t const& v, core::engine::opencl& e)
+    {
+        auto const bsize = sizeof(value_type) * v.size();
+        e.queue.enqueueWriteBuffer(grad_buffer, CL_TRUE, 0, bsize, v.data());
+    }
+
+    auto get_data(core::engine::opencl& e) -> vec_t
+    {
+        vec_t v(data.size() * data[0].size());
+        auto bsize = sizeof(value_type) * v.size();
+        e.queue.enqueueReadBuffer(data_buffer, CL_TRUE, 0, bsize, v.data());
+        return v;
+    }
+
+    auto get_grad(core::engine::opencl& e) -> vec_t
+    {
+        vec_t v(grad.size() * grad[0].size());
+        auto bsize = sizeof(value_type) * v.size();
+        e.queue.enqueueReadBuffer(grad_buffer, CL_TRUE, 0, bsize, v.data());
+        return v;
+    }
+
     // merge all grads to grad[0]
     void merge_grads()
     {
