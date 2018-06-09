@@ -59,7 +59,7 @@ struct layer : node
 
     void set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng);
     void set_input_data(tensor const& input, core::engine::engine_type& eng);
-    void set_output_grad(tensor const& grad);
+    void set_output_grad(tensor const& grad, core::engine::engine_type& eng);
     void output_data(tensor& out);
     auto get_input_data(size_t i) -> tensor&;
     auto get_input_grad() const -> std::vector<tensor>;
@@ -141,7 +141,6 @@ void layer::allocate_input(shape3d_t const& shape)
     input[0] = std::make_shared<edge>();
 }
 
-// TODO deprecated?
 void layer::set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng)
 {
     ignore(eng);
@@ -150,7 +149,9 @@ void layer::set_input_data(std::vector<tensor> const& input, core::engine::engin
         for (auto i = 0u; i < input.size(); i++)
             this->input[i]->data = input[i];
     } else if (backend == core::backend_type::opencl) {
-        // TODO
+        auto& e = std::get<core::engine::opencl>(eng);
+        for (auto i = 0u; i < input.size(); i++)
+            this->input[i]->set_data(tensor_to_vector(input[i]), e);
     }
 }
 
@@ -159,17 +160,21 @@ void layer::set_input_data(tensor const& input, core::engine::engine_type& eng)
     if (backend == core::backend_type::internal) {
         this->input[0]->data = input;
     } else if (backend == core::backend_type::opencl){
+        this->input[0]->data = input;
         auto& e = std::get<core::engine::opencl>(eng);
         this->input[0]->set_data(tensor_to_vector(input), e);
-        // TODO
     }
 }
 
-void layer::set_output_grad(tensor const& grad)
+void layer::set_output_grad(tensor const& grad, core::engine::engine_type& eng)
 {
-    // TODO assume all needed memory allocated and for opencl need to
-    // deal with seperately
-    output[0]->grad = grad;
+    if (backend == core::backend_type::internal) {
+        output[0]->grad = grad;
+    } else if (backend == core::backend_type::opencl){
+        output[0]->grad = grad;
+        auto& e = std::get<core::engine::opencl>(eng);
+        output[0]->set_grad(tensor_to_vector(grad), e);
+    }
 }
 
 void layer::output_data(tensor& out)

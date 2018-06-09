@@ -16,7 +16,6 @@ namespace yonn
 
 struct convolutional_layer : layer
 {
-    // TODO backend
     convolutional_layer(
         size_t in_width,
         size_t in_height,
@@ -43,6 +42,19 @@ struct convolutional_layer : layer
         size_t w_stride,
         size_t h_stride,
         core::backend_type backend
+    );
+
+    convolutional_layer(
+        size_t in_width,
+        size_t in_height,
+        size_t window_size,
+        size_t in_channels,
+        size_t out_channels,
+        core::backend_type backend,
+        padding pad_type,
+        bool has_bias,
+        size_t w_stride,
+        size_t h_stride
     );
 
     convolutional_layer(
@@ -193,6 +205,31 @@ convolutional_layer::convolutional_layer(
     size_t window_size,
     size_t in_channels,
     size_t out_channels,
+    core::backend_type backend = core::default_engine(),
+    padding pad_type = padding::valid,
+    bool has_bias = true,
+    size_t w_stride = 1,
+    size_t h_stride = 1
+) :
+    convolutional_layer(
+        in_width,    in_height,
+        window_size, window_size,
+        in_channels, out_channels,
+        core::connection_table(),
+        pad_type,
+        has_bias,
+        w_stride, h_stride,
+        backend
+    )
+{
+}
+
+convolutional_layer::convolutional_layer(
+    size_t in_width,
+    size_t in_height,
+    size_t window_size,
+    size_t in_channels,
+    size_t out_channels,
     padding pad_type = padding::valid,
     bool has_bias = true,
     size_t w_stride = 1,
@@ -297,6 +334,12 @@ void convolutional_layer::forward_propagation(core::engine::engine_type& eng, bo
             out_data[i].emplace<tensor*>(output[i]->get_data());
 
     } else if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < in_channels; i++)
+                input[i]->set_data(tensor_to_vector(input[i]->data), e);
+        }
+
         for (size_t i{0}; i < in_channels; i++)
             in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
 
@@ -308,6 +351,14 @@ void convolutional_layer::forward_propagation(core::engine::engine_type& eng, bo
     forward_context.set_engine(layer::engine());
 
     forward_kernel->compute(forward_context, eng, united_backend);
+
+    if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < out_channels; i++)
+                vector_to_tensor(output[i]->get_data(e), output[i]->data);
+        }
+    }
 }
 
 void convolutional_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend = true)
@@ -333,6 +384,14 @@ void convolutional_layer::backward_propagation(core::engine::engine_type& eng, b
         }
 
     } else if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < out_channels; i++) {
+                output[i]->set_data(tensor_to_vector(output[i]->data), e);
+                output[i]->set_grad(tensor_to_vector(output[i]->grad), e);
+            }
+        }
+
         for (size_t i{0}; i < in_channels; i++) {
             in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
             in_grad[i].emplace<cl::Buffer*>(input[i]->get_grad_buffer());
@@ -348,6 +407,16 @@ void convolutional_layer::backward_propagation(core::engine::engine_type& eng, b
     backward_context.set_engine(layer::engine());
 
     backward_kernel->compute(backward_context, eng, united_backend);
+
+    if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < in_channels; i++) {
+                vector_to_tensor(input[i]->get_data(e), input[i]->data);
+                vector_to_tensor(input[i]->get_grad(e), input[i]->grad);
+            }
+        }
+    }
 }
 
 } // namespace yonn
