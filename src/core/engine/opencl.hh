@@ -38,40 +38,40 @@ struct opencl
         queue = cl::CommandQueue{context, default_device};
     }
 
-    void init_kernel(
-        std::string const& name,
-        std::string const& kernel_code,
-        size_t nd_size
-    )
-    {
-        cl::Program::Sources sources;
+    // void init_kernel(
+    //     std::string const& name,
+    //     std::string const& kernel_code,
+    //     std::vector<size_t> nd_size
+    // )
+    // {
+    //     cl::Program::Sources sources;
 
-        sources.emplace_back(kernel_code.c_str(), kernel_code.size());
+    //     sources.emplace_back(kernel_code.c_str(), kernel_code.size());
 
-        cl::Program program{context, sources};
-        if (program.build({default_device}) != CL_SUCCESS) {
-            // TODO throw error
-        }
+    //     cl::Program program{context, sources};
+    //     if (program.build({default_device}) != CL_SUCCESS) {
+    //         // TODO throw error
+    //     }
 
-        forward_kernels.emplace(std::make_pair(
-            name,
-            cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "forward")
-        ));
+    //     forward_kernels.emplace(std::make_pair(
+    //         name,
+    //         cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "forward")
+    //     ));
 
-        backward_kernels.emplace(std::make_pair(
-            name,
-            cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "backward")
-        ));
+    //     backward_kernels.emplace(std::make_pair(
+    //         name,
+    //         cl::make_kernel<cl::Buffer&, cl::Buffer&, cl::Buffer&>(program, "backward")
+    //     ));
 
-        forward_eargs.emplace(std::make_pair(
-            name,
-            cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
-        ));
-        backward_eargs.emplace(std::make_pair(
-            name,
-            cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
-        ));
-    }
+    //     forward_eargs.emplace(std::make_pair(
+    //         name,
+    //         cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
+    //     ));
+    //     backward_eargs.emplace(std::make_pair(
+    //         name,
+    //         cl::EnqueueArgs{queue, cl::NDRange(nd_size)}
+    //     ));
+    // }
 
     std::vector<cl::Platform> all_platforms;
     cl::Platform default_platform;
@@ -80,10 +80,10 @@ struct opencl
     cl::Context context;
     cl::CommandQueue queue;
 
-    std::unordered_map<std::string, std::any> forward_kernels;
-    std::unordered_map<std::string, std::any> backward_kernels;
-    std::unordered_map<std::string, cl::EnqueueArgs> forward_eargs;
-    std::unordered_map<std::string, cl::EnqueueArgs> backward_eargs;
+    // std::unordered_map<std::string, std::any> forward_kernels;
+    // std::unordered_map<std::string, std::any> backward_kernels;
+    // std::unordered_map<std::string, cl::EnqueueArgs> forward_eargs;
+    // std::unordered_map<std::string, cl::EnqueueArgs> backward_eargs;
 };
 
 

@@ -78,8 +78,8 @@ struct fully_connected_layer : layer
         core::engine::engine_type& eng
     ) override;
 
-    void forward_propagation(core::engine::engine_type& eng) override;
-    void backward_propagation(core::engine::engine_type& eng) override;
+    void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
+    void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
 
 // TODO uncomment
 // private:
@@ -112,7 +112,7 @@ void fully_connected_layer::init_engine(
 }
 
 
-void fully_connected_layer::forward_propagation(core::engine::engine_type& eng)
+void fully_connected_layer::forward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
     // TODO init once
     // TODO const in data?
@@ -139,7 +139,7 @@ void fully_connected_layer::forward_propagation(core::engine::engine_type& eng)
     forward_kernel->compute(forward_context, eng);
 }
 
-void fully_connected_layer::backward_propagation(core::engine::engine_type& eng)
+void fully_connected_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
     using data_type = std::variant<tensor*, cl::Buffer*>;
     std::vector<data_type> in_data(in_channels);

@@ -49,8 +49,8 @@ struct leaky_relu : layer
         core::engine::engine_type& eng
     ) override;
 
-    void forward_propagation(core::engine::engine_type& eng) override;
-    void backward_propagation(core::engine::engine_type& eng) override;
+    void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
+    void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
 
     void forward_activation(vec_t const& in, vec_t& out);
     void backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy);
@@ -82,7 +82,7 @@ void leaky_relu::init_engine(
 }
 
 
-void leaky_relu::forward_propagation(core::engine::engine_type& eng)
+void leaky_relu::forward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
     // TODO init once
     // TODO const in data?
@@ -93,7 +93,7 @@ void leaky_relu::forward_propagation(core::engine::engine_type& eng)
         forward_activation(in_data[sample], out_data[sample]);
 }
 
-void leaky_relu::backward_propagation(core::engine::engine_type& eng)
+void leaky_relu::backward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
     tensor const& in_data  = *(input[0] ->get_data());
     tensor&       in_grad  = *(input[0] ->get_grad());

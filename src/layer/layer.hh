@@ -28,13 +28,13 @@ struct layer : node
     virtual auto fan_in_size()  const -> size_t = 0;
     virtual auto fan_out_size() const -> size_t = 0;
 
-    virtual void forward_propagation(core::engine::engine_type& eng)  = 0;
-    virtual void backward_propagation(core::engine::engine_type& eng) = 0;
+    virtual void forward_propagation(core::engine::engine_type& eng, bool united_backend = true) = 0;
+    virtual void backward_propagation(core::engine::engine_type& eng, bool united_backend = true) = 0;
 
     void allocate_nsamples(size_t batch_size);
 
-    template <class Context>
-    void allocate_nsamples(size_t batch_size, Context const& context);
+    // TODO non pure virtual
+    virtual void allocate_nsamples(size_t batch_size, core::engine::opencl& e);
 
     void allocate_output();
     void allocate_input(shape3d_t const& shape);
@@ -48,8 +48,8 @@ struct layer : node
     auto engine() const -> core::backend_type { return backend; }
     void set_engine(core::backend_type const& backend) { this->backend = backend; }
 
-    void forward(core::engine::engine_type& eng) { forward_propagation(eng); }
-    void backward(core::engine::engine_type& eng) { backward_propagation(eng); }
+    void forward(core::engine::engine_type& eng, bool united_backend = true) { forward_propagation(eng, united_backend); }
+    void backward(core::engine::engine_type& eng, bool united_backend = true) { backward_propagation(eng, united_backend); }
 
     void set_input_data(std::vector<tensor> const& input);
     void set_input_data(tensor const& input);
@@ -115,21 +115,6 @@ void layer::allocate_nsamples(size_t batch_size)
     if (backend == core::backend_type::internal) {
         input[0]->allocate_nsamples(batch_size, input_shape(0));
         output[0]->allocate_nsamples(batch_size, output_shape(0));
-    }
-}
-
-template <class Context>
-void layer::allocate_nsamples(size_t batch_size, Context const& context)
-{
-    this->batch_size = batch_size;
-    if (backend == core::backend_type::internal) {
-        input[0]->allocate_nsamples(batch_size, input_shape(0));
-        output[0]->allocate_nsamples(batch_size, output_shape(0));
-    } else if (backend == core::backend_type::opencl) {
-        input[0]->allocate_nsamples(batch_size, input_shape(0), context);
-        output[0]->allocate_nsamples(batch_size, output_shape(0), context);
-    } else {
-        // TODO error or currently not supportted backend
     }
 }
 

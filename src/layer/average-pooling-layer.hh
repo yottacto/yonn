@@ -118,8 +118,8 @@ struct average_pooling_layer : layer
         core::engine::engine_type& eng
     ) override;
 
-    void forward_propagation(core::engine::engine_type& eng) override;
-    void backward_propagation(core::engine::engine_type& eng) override;
+    void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
+    void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
 
 // TODO uncomment
 // private:
@@ -150,7 +150,7 @@ void average_pooling_layer::init_engine(
     }
 }
 
-void average_pooling_layer::forward_propagation(core::engine::engine_type& eng)
+void average_pooling_layer::forward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
     // TODO init once
     // TODO const in data?
@@ -179,7 +179,7 @@ void average_pooling_layer::forward_propagation(core::engine::engine_type& eng)
     forward_kernel->compute(forward_context, eng);
 }
 
-void average_pooling_layer::backward_propagation(core::engine::engine_type& eng)
+void average_pooling_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend)
 {
 
     using data_type = std::variant<tensor*, cl::Buffer*>;

@@ -64,14 +64,23 @@ struct convolutional_layer : layer
         return "convolutional layer";
     }
 
+    // TODO deprecated
     auto kernel_code() const -> std::string
     {
         return opencl_kernel::conv_kernel_code;
     }
 
-    auto nd_size() const -> size_t
+    auto nd_size() const -> std::vector<size_t>
     {
-        return output_shape(0).size() * batch_size;
+        std::vector<size_t> sizes{
+            output_shape(0).size() * batch_size,
+            output_shape(0).size() * batch_size,
+            output_shape(0).size() * batch_size,
+        };
+        if (params.has_bias)
+            sizes.emplace_back(output_shape(0).size() * batch_size);
+
+        return sizes;
     }
 
     auto fan_in_size() const -> size_t override
@@ -90,15 +99,17 @@ struct convolutional_layer : layer
         core::engine::engine_type& eng
     ) override;
 
-    void forward_propagation(core::engine::engine_type& eng) override;
-    void backward_propagation(core::engine::engine_type& eng) override;
+    void allocate_nsamples(size_t batch_size, core::engine::opencl& e) override;
+
+    void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
+    void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
 
 // private:
     core::conv_parameter params;
     core::framework::op_kernel_context forward_context;
     core::framework::op_kernel_context backward_context;
-    std::shared_ptr<core::framework::op_kernel> forward_kernel;
-    std::shared_ptr<core::framework::op_kernel> backward_kernel;
+    std::unique_ptr<core::kernel::convolutional_op> forward_kernel;
+    std::unique_ptr<core::kernel::convolutional_grad_op> backward_kernel;
 };
 
 // implementation of convolutional_layer
@@ -238,16 +249,37 @@ void convolutional_layer::init_engine(
 
     // internal is inited in ctor
     if (backend == core::backend_type::opencl) {
-        auto const& e = std::get<core::engine::opencl>(eng);
+        auto& e = std::get<core::engine::opencl>(eng);
         input[0] = std::make_shared<edge>();
         input[1] = std::make_shared<edge>(input_shape(1), e.context);
         input[2] = std::make_shared<edge>(input_shape(2), e.context);
 
         output[0] = std::make_shared<edge>();
+
+        forward_kernel->init_opencl_kernel(e);
+        backward_kernel->init_opencl_kernel(e);
     }
 }
 
-void convolutional_layer::forward_propagation(core::engine::engine_type& eng)
+void convolutional_layer::allocate_nsamples(size_t batch_size, core::engine::opencl& e)
+{
+    this->batch_size = batch_size;
+    if (backend == core::backend_type::opencl) {
+        input[0]->allocate_nsamples(batch_size, input_shape(0), e.context);
+        output[0]->allocate_nsamples(batch_size, output_shape(0), e.context);
+
+        forward_kernel->init_opencl(e, batch_size * params.out.size(), batch_size);
+        backward_kernel->init_opencl(e, {
+            batch_size * params.in_padded.size(),
+            params.weight.size(),
+            params.out.depth,
+        }, batch_size);
+    } else {
+        // TODO error or currently not supportted backend
+    }
+}
+
+void convolutional_layer::forward_propagation(core::engine::engine_type& eng, bool united_backend = true)
 {
     // TODO not same size padding, need local storage
 
@@ -278,7 +310,7 @@ void convolutional_layer::forward_propagation(core::engine::engine_type& eng)
     forward_kernel->compute(forward_context, eng);
 }
 
-void convolutional_layer::backward_propagation(core::engine::engine_type& eng)
+void convolutional_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend = true)
 {
     // TODO same size padding
 

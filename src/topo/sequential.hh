@@ -44,11 +44,6 @@ struct sequential : nodes<sequential>
         if (l.engine() != backend)
             united_backend = false;
 
-        if (l.engine() == core::backend_type::opencl) {
-            auto& e = std::get<core::engine::opencl>(eng);
-            e.init_kernel(l.name(), l.kernel_code(), l.nd_size());
-        }
-
         if (all_nodes.size() != 1) {
             connect(all_nodes[all_nodes.size() - 2], all_nodes.back());
         }
@@ -82,13 +77,14 @@ struct sequential : nodes<sequential>
 
 void sequential::allocate_nsamples(size_t batch_size)
 {
-    if (backend == core::backend_type::internal) {
-        for (auto const& l : all_nodes)
+    for (auto const& l : all_nodes) {
+        auto backend = l->engine();
+        if (backend == core::backend_type::internal) {
             l->allocate_nsamples(batch_size);
-    } else if (backend == core::backend_type::opencl) {
-        auto const& e = std::get<core::engine::opencl>(eng);
-        for (auto const& l : all_nodes)
-            l->allocate_nsamples(batch_size, e.context);
+        } else if (backend == core::backend_type::opencl) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            l->allocate_nsamples(batch_size, e);
+        }
     }
 }
 
@@ -97,7 +93,7 @@ auto sequential::forward(tensor const& first) -> tensor
     all_nodes.front()->set_input_data(first);
 
     for (auto const& l : all_nodes)
-        l->forward(eng);
+        l->forward(eng, united_backend);
 
     tensor outt;
     // FIXME
