@@ -22,3 +22,5 @@
 #include "activation/tanh.hh"
 #include "activation/leaky_relu.hh"
 
+#include "core/backend.hh"
+
