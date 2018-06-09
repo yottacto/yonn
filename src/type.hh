@@ -29,7 +29,7 @@ auto inline operator/(vec_t const& lhs, value_type rhs)
 }
 
 // TODO unsigned int or unsigned long
-using size_t = unsigned long;
+using size_t = unsigned int;
 
 using label_t = size_t;
 
