@@ -28,19 +28,29 @@ int main()
 {
     std::vector<yonn::tensor> in{
         {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+                1, 2, 3, 4,
+            },
+
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         },
 
-        {{0, 0}},
+        {{1, 2}},
 
-        {{0, 0}},
+        {{1, 2}},
     };
     yonn::tensor dout{
-        {0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1},
     };
 
     for (auto& i : in)
@@ -56,7 +66,7 @@ int main()
     auto& eng = net.net.eng;
     auto& e   = std::get<yonn::core::engine::opencl>(eng);
 
-    auto back = internal;
+    auto back = opencl;
     auto l = avg_pool(4, 4, 2, 2, back);
     l.init_engine(back, eng);
     if (back == internal)
@@ -64,8 +74,14 @@ int main()
     else if (back == opencl)
         l.allocate_nsamples_opencl(2, e);
 
+    l.set_input_data(in, eng);
+    l.forward(eng, false);
+    print(l.get_output_data());
+    // l.set_output_grad(dout, eng);
+    // l.backward(eng, false);
+    // print(l.get_input_grad()[1]);
 
-    // print(yonn::gradient_check(l, in)[0]);
+    // print(yonn::gradient_check(l, in, dout, eng)[0]);
     std::cout << yonn::gradient_check(l, in, dout, eng) << "\n";
 
     std::cout << "hello world\n";

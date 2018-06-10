@@ -29,7 +29,7 @@ my $build__flags_path = "build.flags";
 my $build__makefile_path = "makefile";
 my $build__output_dir = "build";
 my $build__output_bin = "build";
-my $build__main_impl = "../tests/backend/conv/main.cc";
+my $build__main_impl = "../tests/backend/avg_pool/main.cc";
 
 my $makefile__show_commands = 1;
 my @makefile__commands__test = (
