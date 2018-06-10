@@ -118,7 +118,7 @@ void vector_to_tensor(vec_t const& v, tensor& t)
     auto it = std::begin(v);
     for (auto& vi : t) {
         std::copy(it, it + vi.size(), std::begin(vi));
-        it += v.size();
+        it += vi.size();
     }
 }
 
