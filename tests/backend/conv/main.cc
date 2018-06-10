@@ -8,6 +8,7 @@ void random_generate(yonn::tensor& t)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
+    // std::mt19937 gen(444);
     std::uniform_real_distribution<> dis(-1, 1);
     for (auto& v : t)
         for (auto& i : v)
@@ -115,8 +116,8 @@ int main()
         },
     };
 
-    // for (auto& i : in) random_generate(i);
-    // random_generate(dout);
+    for (auto& i : in) random_generate(i);
+    random_generate(dout);
 
 
     using conv    = yonn::convolutional_layer;
@@ -135,16 +136,16 @@ int main()
     else if (back == opencl)
         l.allocate_nsamples_opencl(2, e);
 
-    l.set_input_data(in, eng);
-    l.forward(eng, false);
+    // l.set_input_data(in, eng);
+    // l.forward(eng, false);
     // print(l.get_output_data());
-    l.set_output_grad(dout, eng);
-    l.backward(eng, false);
+    // l.set_output_grad(dout, eng);
+    // l.backward(eng, false);
     // print(l.get_input_grad()[1]);
 
-    // print(yonn::gradient_check(l, in, dout, eng)[1]);
+    // print(yonn::gradient_check(l, in, dout, eng)[0]);
     std::cout << yonn::gradient_check(l, in, dout, eng) << "\n";
 
-    std::cout << "hello world\n";
+    std::cout << "hello conv\n";
 }
 

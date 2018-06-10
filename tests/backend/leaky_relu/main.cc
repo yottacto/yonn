@@ -7,7 +7,8 @@
 void random_generate(yonn::tensor& t)
 {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(123);
+    // std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-0.1, 0.1);
     for (auto& v : t)
         for (auto& i : v)
