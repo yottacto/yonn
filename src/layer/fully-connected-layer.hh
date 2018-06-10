@@ -124,7 +124,7 @@ void fully_connected_layer::init_engine(
             if (in_types[i] == data_type::weight)
                 init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
     } else if (backend == core::backend_type::opencl) {
-        auto const& e = std::get<core::engine::opencl>(eng);
+        auto& e = std::get<core::engine::opencl>(eng);
         input[0] = std::make_shared<edge>();
         input[1] = std::make_shared<edge>(input_shape(1), e.context);
         input[2] = std::make_shared<edge>(input_shape(2), e.context);
