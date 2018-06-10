@@ -17,7 +17,6 @@ int get_index(int w, int h, int d, int x, int y, int z)
 }
 
 kernel void forward(
-    int sample_count,
     int in_w,
     int in_h,
     int in_d,
@@ -56,7 +55,7 @@ kernel void forward(
     tid %= out_w;
     int ow = tid;
 
-
+    // TODO change out[gid] to sum
     global value_type const* in = in_data + sample * in_size;
     out[gid] = 0;
     for (int id = 0; id < in_d; id++) {

@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+
 #include <variant>
 #include <string>
 #include <memory>
@@ -23,7 +25,7 @@ namespace kernel
 struct convolutional_op : framework::op_kernel
 {
     using fk_type = cl::make_kernel<
-        int, int, int, int, int, int, int, int, int, int, int, int,
+        int, int, int, int, int, int, int, int, int, int, int,
         cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
@@ -88,7 +90,6 @@ struct convolutional_op : framework::op_kernel
             data_type& out_data = *std::get<data_type*>(context.output(0));
 
             (*fk)(*fk_eargs,
-                sample_count,
                 params.in_padded.width,
                 params.in_padded.height,
                 params.in_padded.depth,
@@ -253,7 +254,7 @@ struct convolutional_grad_op : framework::op_kernel
         }
     }
 
-// TODO uncomment
+// TODO uncomment it
 // private:
     conv_parameter params;
     std::string name;
