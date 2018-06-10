@@ -19,9 +19,7 @@ struct network
 {
     using network_type = Net;
 
-    network() = default;
-
-    network(core::backend_type backend)
+    network(core::backend_type backend = core::default_engine())
         : backend{backend}, net{backend}
     {
     }

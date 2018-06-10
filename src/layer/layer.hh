@@ -16,7 +16,7 @@ struct layer : node
     layer(
         std::vector<data_type> const& in_types,
         std::vector<data_type> const& out_types,
-        core::backend_type backend = core::backend_type::internal
+        core::backend_type backend = core::layer_default_engine()
     ) : node(in_types.size(), out_types.size()),
         in_types{in_types}, out_types{out_types},
         in_channels(in_types.size()), out_channels(out_types.size()),

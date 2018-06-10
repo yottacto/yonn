@@ -19,6 +19,11 @@ inline auto default_engine()
     return backend_type::internal;
 }
 
+inline auto layer_default_engine()
+{
+    return backend_type::network_default;
+}
+
 namespace engine
 {
 
