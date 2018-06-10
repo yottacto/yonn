@@ -108,18 +108,12 @@ void tanh::backward_propagation(core::engine::engine_type& eng, bool united_back
 
 void tanh::forward_activation(vec_t const& in, vec_t& out)
 {
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t i = 0; i < in.size(); i++)
         out[i] = std::tanh(in[i]);
 }
 
 void tanh::backward_activation(vec_t const& x, vec_t& dx, vec_t const& y, vec_t const& dy)
 {
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t i = 0; i < x.size(); i++)
         dx[i] = dy[i] * (value_type(1) - sqr(y[i]));
 }

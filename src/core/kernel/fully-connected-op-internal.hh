@@ -21,9 +21,6 @@ inline void fully_connected_op_internal(
 )
 {
     // TODO parallelize
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto& out      = out_data[sample];
@@ -63,9 +60,6 @@ inline void fully_connected_op_internal(
     // TODO clear grads or just assign the newvalue
     // TODO parallelize
 
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t sample = 0; sample < in_data.size(); sample++) {
         // derivatives for input data, heere dx
         // FIXME params in_size and out_size

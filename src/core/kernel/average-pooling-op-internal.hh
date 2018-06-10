@@ -21,9 +21,6 @@ inline void average_pooling_op_internal(
 )
 {
     // TODO parallelize
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in = in_data[sample];
         auto & out = out_data[sample];
@@ -71,9 +68,6 @@ inline void average_pooling_op_internal(
     auto const& area = params.pool_width * params.pool_height;
 
     // TODO parallelize
-    #if USE_OPENMP
-    #pragma omp for
-    #endif
     for (size_t sample = 0; sample < in_data.size(); sample++) {
         auto const& in          = in_data[sample];
         auto const& dout_sample = dout[sample];
