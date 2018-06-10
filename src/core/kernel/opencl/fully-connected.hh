@@ -8,6 +8,8 @@ namespace opencl_kernel
 
 std::string fully_kernel_code{R"(
 
+typedef double value_type;
+
 kernel void forward(
     int in_size,
     int out_size,
@@ -26,7 +28,7 @@ kernel void forward(
     tid %= out_size;
     int oi = tid;
 
-    global value_type const* in_data = in + sample * in_size;
+    global value_type const* in = in_data + sample * in_size;
     value_type sum = 0;
     for (int i = 0; i < in_size; i++)
         sum += in[i] * w[i * out_size + oi];
@@ -74,7 +76,7 @@ kernel void backward_dw(
     int gid = get_global_id(0);
     int tid = gid;
     int hi = tid / out_size;
-    tid %= w_area;
+    tid %= out_size;
     int wi = tid;
 
     value_type sum = 0;
