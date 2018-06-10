@@ -109,8 +109,8 @@ inline void connect(
     next->allocate_output();
     next->input[in_index] = prev->output[out_index];
     // prev->output[out_index] = next->input[in_index];
-    next->input[in_index]->prev = prev;
-    next->input[in_index]->next = next;
+    // next->input[in_index]->prev = prev;
+    // next->input[in_index]->next = next;
 }
 
 // implentation of layer

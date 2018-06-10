@@ -9,7 +9,7 @@ namespace opencl_kernel
 std::string fully_kernel_code{R"(
 
 typedef unsigned int size_t;
-typedef float value_type;
+typedef double value_type;
 
 kernel size_t get_index(size_t w, size_t h, size_t d, size_t x, size_t y, size_t z)
 {

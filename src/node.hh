@@ -115,8 +115,9 @@ struct edge
     cl::Buffer data_buffer;
     cl::Buffer grad_buffer;
 
-    std::weak_ptr<node> prev;
-    std::weak_ptr<node> next;
+    // TODO deprecated, remove this
+    // std::weak_ptr<node> prev;
+    // std::weak_ptr<node> next;
 };
 
 } // namespace yonn

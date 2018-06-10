@@ -5,6 +5,7 @@
 #include <CL/cl.hpp>
 #include "layer/layer.hh"
 #include "util/util.hh"
+#include "core/backend.hh"
 #include "tensor.hh"
 
 #include "core/kernel/opencl/leaky-relu.hh"
@@ -22,12 +23,21 @@ struct leaky_relu : layer
     >;
 
     using bk_type = cl::make_kernel<
+        value_type,
         cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
-    explicit leaky_relu(value_type epsilon = 0.01)
-        : layer({data_type::data}, {data_type::data}), epsilon{epsilon}
+    explicit leaky_relu(
+        value_type epsilon = 0.01,
+        core::backend_type backend = core::layer_default_engine()
+    ) :
+        layer({data_type::data}, {data_type::data}, backend), epsilon{epsilon}
     {}
+
+    explicit leaky_relu(core::backend_type backend, value_type epsilon = 0.01)
+        : leaky_relu(epsilon, backend)
+    {}
+
 
     // TODO explicit specify the dims
 
@@ -184,7 +194,7 @@ void leaky_relu::backward_propagation(core::engine::engine_type& eng, bool unite
         cl::Buffer& in_grad  = *(input[0] ->get_grad_buffer());
         cl::Buffer& out_data = *(output[0]->get_data_buffer());
         cl::Buffer& out_grad = *(output[0]->get_grad_buffer());
-        (*bk)(*bk_eargs, out_data, out_grad, in_grad);
+        (*bk)(*bk_eargs, epsilon, out_data, out_grad, in_grad);
 
         if (!united_backend) {
             auto& e = std::get<core::engine::opencl>(eng);

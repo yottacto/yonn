@@ -31,7 +31,7 @@ kernel void forward(
     int in_area = in_h * in_w;
     int out_size = out_d * out_h * out_w;
     int out_area = out_h * out_w;
-    int pool_area = pool_w * pool_h;
+    value_type pool_area = pool_w * pool_h;
 
     // (out_h, out_w, out_d, sample_count)
     // (oh,    ow,    od,    sample)
@@ -58,7 +58,7 @@ kernel void forward(
         in += in_w;
     }
     sum *= w[od];
-    sum /= value_type(pool_area);
+    sum /= pool_area;
     // TODO if has_bias
     sum += bias[od];
 

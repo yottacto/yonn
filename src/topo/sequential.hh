@@ -36,12 +36,14 @@ struct sequential : nodes<sequential>
     {
         emplace_back(std::forward<Layer>(l));
 
-        if (l.engine() == core::backend_type::network_default)
-            l.init_engine(backend, eng);
-        else
-            l.init_engine(l.engine(), eng);
+        auto& last = *all_nodes.back();
 
-        if (l.engine() != backend)
+        if (last.engine() == core::backend_type::network_default)
+            last.init_engine(backend, eng);
+        else
+            last.init_engine(last.engine(), eng);
+
+        if (last.engine() != backend)
             united_backend = false;
 
         if (all_nodes.size() != 1) {
@@ -108,7 +110,7 @@ void sequential::backward(tensor const& first)
     own_nodes.back()->set_output_grad(first, eng);
 
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
-        (*l)->backward(eng);
+        (*l)->backward(eng, united_backend);
 }
 
 void sequential::update_weight(optimizer::optimizer* opt)

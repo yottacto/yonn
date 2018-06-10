@@ -39,8 +39,11 @@ struct average_pooling_layer : layer
         backward_kernel(new core::kernel::average_pooling_grad_op(params, name()))
     {
         in_shapes.emplace_back(params.in.size(), 1, 1);
-        in_shapes.emplace_back(params.in.size(), 1, 1);
-        in_shapes.emplace_back(params.in.size(), 1, 1);
+        // TODO wtf?
+        // in_shapes.emplace_back(params.in.size(), 1, 1);
+        // in_shapes.emplace_back(params.in.size(), 1, 1);
+        in_shapes.emplace_back(params.out.depth, 1, 1);
+        in_shapes.emplace_back(params.in.depth, 1, 1);
 
         out_shapes.emplace_back(params.out.size(), 1, 1);
 

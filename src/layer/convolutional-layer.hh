@@ -8,6 +8,7 @@
 #include "core/parameter/conv-parameter.hh"
 #include "core/framework/op-kernel.hh"
 #include "core/kernel/convolutional-op.hh"
+#include "core/backend.hh"
 
 #include "core/kernel/opencl/convolutional.hh"
 
@@ -64,11 +65,11 @@ struct convolutional_layer : layer
         size_t in_channels,
         size_t out_channels,
         core::connection_table const& table,
-        padding pad_type,       // = padding::valid,
-        bool has_bias,          // = true,
-        size_t w_stride,        // = 1,
-        size_t h_stride,        // = 1,
-        core::backend_type backend   // = core::default_engine()
+        core::backend_type backend, // = core::default_engine()
+        padding pad_type,           // = padding::valid,
+        bool has_bias,              // = true,
+        size_t w_stride,            // = 1,
+        size_t h_stride             // = 1,
     );
 
     auto name() const -> std::string override
@@ -125,6 +126,7 @@ struct convolutional_layer : layer
 };
 
 // implementation of convolutional_layer
+// FIXME assume has_bias always true, see init_engine (bias allocation)
 convolutional_layer::convolutional_layer(
     size_t in_width,
     size_t in_height,
@@ -206,7 +208,7 @@ convolutional_layer::convolutional_layer(
     size_t window_size,
     size_t in_channels,
     size_t out_channels,
-    core::backend_type backend = core::layer_default_engine(),
+    core::backend_type backend,
     padding pad_type = padding::valid,
     bool has_bias = true,
     size_t w_stride = 1,
@@ -257,11 +259,11 @@ convolutional_layer::convolutional_layer(
     size_t in_channels,
     size_t out_channels,
     core::connection_table const& table,
+    core::backend_type backend = core::layer_default_engine(),
     padding pad_type = padding::valid,
     bool has_bias = true,
     size_t w_stride = 1,
-    size_t h_stride = 1,
-    core::backend_type backend = core::layer_default_engine()
+    size_t h_stride = 1
 ) :
     convolutional_layer(
         in_width,    in_height,
@@ -431,6 +433,7 @@ void convolutional_layer::backward_propagation(core::engine::engine_type& eng, b
         if (!united_backend) {
             auto& e = std::get<core::engine::opencl>(eng);
             for (size_t i{0}; i < in_channels; i++) {
+                // TODO does it need to copy back data
                 vector_to_tensor(input[i]->get_data(e), input[i]->data);
                 vector_to_tensor(input[i]->get_grad(e), input[i]->grad);
             }

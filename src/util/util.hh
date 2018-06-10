@@ -78,6 +78,7 @@ inline auto out_length(
 // TODO init_weight
 inline void init_weight(vec_t& a, size_t fan_in, size_t fan_out)
 {
+    // std::cerr << ">> " << fan_in << ", " << fan_out << "\n";
     value_type weight_base = std::sqrt(6. / (fan_in + fan_out));
 
     // std::random_device rd{};
