@@ -17,9 +17,14 @@ struct fully_connected_layer : layer
 {
     // FIXME assume has_bias always true
     // TODO backend
-    fully_connected_layer(size_t in_dims, size_t out_dims, bool has_bias = true) :
+    fully_connected_layer(
+        size_t in_dims,
+        size_t out_dims,
+        core::backend_type backend = core::layer_default_engine(),
+        bool has_bias = true
+    ) :
         // FIXME layer need backend
-        layer(std_input_types(has_bias), {data_type::data}),
+        layer(std_input_types(has_bias), {data_type::data}, backend),
         params(in_dims, out_dims, has_bias),
         // FIXME op_kernel need context to constrct, in fact in order to
         // specify device and layer's params
@@ -130,30 +135,31 @@ void fully_connected_layer::init_engine(
             if (in_types[i] == data_type::weight)
                 init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
 
-        // for (auto i = 1u; i < input.size(); i++)
-        //     this->input[i]->set_data(tensor_to_vector(input[i]->data), e);
+        for (auto i = 1u; i < input.size(); i++)
+            this->input[i]->set_data(tensor_to_vector(input[i]->data), e);
 
-        // TODO
+        forward_kernel->init_opencl_kernel(e);
+        backward_kernel->init_opencl_kernel(e);
     }
 }
 
 // TODO copy from conv
 void fully_connected_layer::allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e)
 {
-    // this->batch_size = batch_size;
-    // if (backend == core::backend_type::opencl) {
-    //     input[0]->allocate_nsamples(batch_size, input_shape(0), e.context);
-    //     output[0]->allocate_nsamples(batch_size, output_shape(0), e.context);
+    this->batch_size = batch_size;
+    if (backend == core::backend_type::opencl) {
+        input[0]->allocate_nsamples(batch_size, input_shape(0), e.context);
+        output[0]->allocate_nsamples(batch_size, output_shape(0), e.context);
 
-    //     forward_kernel->init_opencl(e, batch_size * params.out.size(), batch_size);
-    //     backward_kernel->init_opencl(e, {
-    //         batch_size * params.in_padded.size(),
-    //         params.weight.size(),
-    //         params.out.depth,
-    //     }, batch_size);
-    // } else {
-    //     // TODO error or currently not supportted backend
-    // }
+        forward_kernel->init_opencl(e, batch_size * params.out_size, batch_size);
+        backward_kernel->init_opencl(e, {
+            batch_size * params.in_size,
+            params.in_size * params.out_size,
+            params.out_size,
+        }, batch_size);
+    } else {
+        // TODO error or currently not supportted backend
+    }
 }
 
 
@@ -173,6 +179,12 @@ void fully_connected_layer::forward_propagation(core::engine::engine_type& eng, 
             out_data[i].emplace<tensor*>(output[i]->get_data());
 
     } else if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < in_channels; i++)
+                input[i]->set_data(tensor_to_vector(input[i]->data), e);
+        }
+
         for (size_t i{0}; i < in_channels; i++)
             in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
 
@@ -184,6 +196,14 @@ void fully_connected_layer::forward_propagation(core::engine::engine_type& eng, 
     forward_context.set_engine(layer::engine());
 
     forward_kernel->compute(forward_context, eng, united_backend);
+
+    if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < out_channels; i++)
+                vector_to_tensor(output[i]->get_data(e), output[i]->data);
+        }
+    }
 }
 
 void fully_connected_layer::backward_propagation(core::engine::engine_type& eng, bool united_backend)
@@ -207,6 +227,14 @@ void fully_connected_layer::backward_propagation(core::engine::engine_type& eng,
         }
 
     } else if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < out_channels; i++) {
+                output[i]->set_data(tensor_to_vector(output[i]->data), e);
+                output[i]->set_grad(tensor_to_vector(output[i]->grad), e);
+            }
+        }
+
         for (size_t i{0}; i < in_channels; i++) {
             in_data[i].emplace<cl::Buffer*>(input[i]->get_data_buffer());
             in_grad[i].emplace<cl::Buffer*>(input[i]->get_grad_buffer());
@@ -222,6 +250,17 @@ void fully_connected_layer::backward_propagation(core::engine::engine_type& eng,
     backward_context.set_engine(layer::engine());
 
     backward_kernel->compute(backward_context, eng, united_backend);
+
+    if (backend == core::backend_type::opencl) {
+        if (!united_backend) {
+            auto& e = std::get<core::engine::opencl>(eng);
+            for (size_t i{0}; i < in_channels; i++) {
+                // TODO does it need to copy back data
+                vector_to_tensor(input[i]->get_data(e), input[i]->data);
+                vector_to_tensor(input[i]->get_grad(e), input[i]->grad);
+            }
+        }
+    }
 }
 
 } // namespace yonn
