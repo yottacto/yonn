@@ -35,7 +35,7 @@ struct layer : node
 
     void allocate_nsamples(size_t batch_size);
 
-    virtual void allocate_nsamples(size_t batch_size, core::engine::opencl& e)
+    virtual void allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e)
     {
         // in case the layer doesnt support opencl backend
         ignore(batch_size);
@@ -143,15 +143,15 @@ void layer::allocate_input(shape3d_t const& shape)
 
 void layer::set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng)
 {
-    ignore(eng);
-
     if (backend == core::backend_type::internal) {
         for (auto i = 0u; i < input.size(); i++)
             this->input[i]->data = input[i];
     } else if (backend == core::backend_type::opencl) {
         auto& e = std::get<core::engine::opencl>(eng);
-        for (auto i = 0u; i < input.size(); i++)
+        for (auto i = 0u; i < input.size(); i++) {
+            this->input[i]->data = input[i];
             this->input[i]->set_data(tensor_to_vector(input[i]), e);
+        }
     }
 }
 

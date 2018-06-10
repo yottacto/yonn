@@ -111,7 +111,7 @@ struct convolutional_layer : layer
         core::engine::engine_type& eng
     ) override;
 
-    void allocate_nsamples(size_t batch_size, core::engine::opencl& e) override;
+    void allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e) override;
 
     void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
     void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
@@ -139,7 +139,7 @@ convolutional_layer::convolutional_layer(
     size_t h_stride = 1,
     core::backend_type backend = core::default_engine()
 ) :
-    layer(std_input_types(has_bias), {data_type::data}),
+    layer(std_input_types(has_bias), {data_type::data}, backend),
     params(
         shape3d_t{in_width, in_height, in_channels},
         window_width,
@@ -188,15 +188,15 @@ convolutional_layer::convolutional_layer(
         input[2] = std::make_shared<edge>(input_shape(2));
 
         output[0] = std::make_shared<edge>();
+
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
     } else if (backend == core::backend_type::opencl) {
         // wait for opencl context, init in init_engine
     } else {
     }
 
-    // TODO init weight
-    for (size_t i{0}; i < in_types.size(); i++)
-        if (in_types[i] == data_type::weight)
-            init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
 }
 
 convolutional_layer::convolutional_layer(
@@ -293,12 +293,19 @@ void convolutional_layer::init_engine(
 
         output[0] = std::make_shared<edge>();
 
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
+
+        for (auto i = 1u; i < input.size(); i++)
+            this->input[i]->set_data(tensor_to_vector(input[i]->data), e);
+
         forward_kernel->init_opencl_kernel(e);
         backward_kernel->init_opencl_kernel(e);
     }
 }
 
-void convolutional_layer::allocate_nsamples(size_t batch_size, core::engine::opencl& e)
+void convolutional_layer::allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e)
 {
     this->batch_size = batch_size;
     if (backend == core::backend_type::opencl) {

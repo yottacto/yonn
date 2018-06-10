@@ -83,7 +83,7 @@ void sequential::allocate_nsamples(size_t batch_size)
             l->allocate_nsamples(batch_size);
         } else if (backend == core::backend_type::opencl) {
             auto& e = std::get<core::engine::opencl>(eng);
-            l->allocate_nsamples(batch_size, e);
+            l->allocate_nsamples_opencl(batch_size, e);
         }
     }
 }
@@ -105,7 +105,7 @@ auto sequential::forward(tensor const& first) -> tensor
 
 void sequential::backward(tensor const& first)
 {
-    own_nodes.back()->set_output_grad(first);
+    own_nodes.back()->set_output_grad(first, eng);
 
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
         (*l)->backward(eng);

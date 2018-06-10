@@ -24,6 +24,7 @@ struct average_pooling_layer : layer
         size_t stride,
         bool has_bias = true
     ) :
+        // FIXME layer need backend
         layer(std_input_types(has_bias), {data_type::data}),
         params(
             shape3d_t{width, height, in_channels},

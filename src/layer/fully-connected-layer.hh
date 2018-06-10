@@ -17,6 +17,7 @@ struct fully_connected_layer : layer
 {
     // TODO backend
     fully_connected_layer(size_t in_dims, size_t out_dims, bool has_bias = true) :
+        // FIXME layer need backend
         layer(std_input_types(has_bias), {data_type::data}),
         params(in_dims, out_dims, has_bias),
         // FIXME op_kernel need context to constrct, in fact in order to
