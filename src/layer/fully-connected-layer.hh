@@ -15,6 +15,7 @@ namespace yonn
 
 struct fully_connected_layer : layer
 {
+    // FIXME assume has_bias always true
     // TODO backend
     fully_connected_layer(size_t in_dims, size_t out_dims, bool has_bias = true) :
         // FIXME layer need backend
@@ -32,21 +33,22 @@ struct fully_connected_layer : layer
 
         out_shapes.emplace_back(out_dims, 1, 1);
 
+        // TODO deprecated, remove this
         // invariant, all input channels allocated in constructor
         // TODO reasoning about this input_shape
-        input[0] = std::make_shared<edge>();
-        input[1] = std::make_shared<edge>(input_shape(1));
-        if (has_bias)
-            input[2] = std::make_shared<edge>((input_shape(2)));
+        // input[0] = std::make_shared<edge>();
+        // input[1] = std::make_shared<edge>(input_shape(1));
+        // if (has_bias)
+        //     input[2] = std::make_shared<edge>((input_shape(2)));
 
-        output[0] = std::make_shared<edge>();
+        // output[0] = std::make_shared<edge>();
 
-        // TODO init different kernel
+        // // TODO init different kernel
 
-        // TODO init weight
-        for (size_t i{0}; i < in_types.size(); i++)
-            if (in_types[i] == data_type::weight)
-                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
+        // // TODO init weight
+        // for (size_t i{0}; i < in_types.size(); i++)
+        //     if (in_types[i] == data_type::weight)
+        //         init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
     }
 
     auto name() const -> std::string override
@@ -79,6 +81,8 @@ struct fully_connected_layer : layer
         core::engine::engine_type& eng
     ) override;
 
+    void allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e) override;
+
     void forward_propagation(core::engine::engine_type& eng, bool united_backend) override;
     void backward_propagation(core::engine::engine_type& eng, bool united_backend) override;
 
@@ -101,8 +105,20 @@ void fully_connected_layer::init_engine(
     if (this->backend == core::backend_type::network_default)
         layer::set_engine(backend);
 
-    // internal is inited in ctor
-    if (backend == core::backend_type::opencl) {
+    if (backend == core::backend_type::internal) {
+        input[0] = std::make_shared<edge>();
+        input[1] = std::make_shared<edge>(input_shape(1));
+        input[2] = std::make_shared<edge>((input_shape(2)));
+
+        output[0] = std::make_shared<edge>();
+
+        // TODO init different kernel
+
+        // TODO init weight
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
+    } else if (backend == core::backend_type::opencl) {
         auto const& e = std::get<core::engine::opencl>(eng);
         input[0] = std::make_shared<edge>();
         input[1] = std::make_shared<edge>(input_shape(1), e.context);
@@ -110,8 +126,34 @@ void fully_connected_layer::init_engine(
 
         output[0] = std::make_shared<edge>();
 
+        for (size_t i{0}; i < in_types.size(); i++)
+            if (in_types[i] == data_type::weight)
+                init_weight(input[i]->data[0], fan_in_size(), fan_out_size());
+
+        // for (auto i = 1u; i < input.size(); i++)
+        //     this->input[i]->set_data(tensor_to_vector(input[i]->data), e);
+
         // TODO
     }
+}
+
+// TODO copy from conv
+void fully_connected_layer::allocate_nsamples_opencl(size_t batch_size, core::engine::opencl& e)
+{
+    // this->batch_size = batch_size;
+    // if (backend == core::backend_type::opencl) {
+    //     input[0]->allocate_nsamples(batch_size, input_shape(0), e.context);
+    //     output[0]->allocate_nsamples(batch_size, output_shape(0), e.context);
+
+    //     forward_kernel->init_opencl(e, batch_size * params.out.size(), batch_size);
+    //     backward_kernel->init_opencl(e, {
+    //         batch_size * params.in_padded.size(),
+    //         params.weight.size(),
+    //         params.out.depth,
+    //     }, batch_size);
+    // } else {
+    //     // TODO error or currently not supportted backend
+    // }
 }
 
 
@@ -138,6 +180,8 @@ void fully_connected_layer::forward_propagation(core::engine::engine_type& eng, 
             out_data[i].emplace<cl::Buffer*>(output[i]->get_data_buffer());
     }
 
+    forward_context.set_in_out(in_data, out_data);
+    forward_context.set_engine(layer::engine());
 
     forward_kernel->compute(forward_context, eng, united_backend);
 }
