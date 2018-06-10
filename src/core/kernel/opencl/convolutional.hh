@@ -8,7 +8,6 @@ namespace opencl_kernel
 
 inline std::string const conv_kernel_code{R"(
 
-// typedef float value_type;
 typedef double value_type;
 
 int get_index(int w, int h, int d, int x, int y, int z)
@@ -55,9 +54,8 @@ kernel void forward(
     tid %= out_w;
     int ow = tid;
 
-    // TODO change out[gid] to sum
     global value_type const* in = in_data + sample * in_size;
-    out[gid] = 0;
+    value_type sum = 0;
     for (int id = 0; id < in_d; id++) {
         if (!table[od + id * out_d])
             continue;
@@ -69,17 +67,18 @@ kernel void forward(
         global value_type const* pin = in + id * in_area
             + ih * in_w + iw;
 
-        value_type sum = 0;
+        value_type tsum = 0;
         for (int yi = 0; yi < w_h; yi++) {
             for (int xi = 0; xi < w_w; xi++)
-                sum += pw[xi] * pin[xi];
+                tsum += pw[xi] * pin[xi];
             pw  += w_w;
             pin += in_w;
         }
-        out[gid] += sum;
+        sum += tsum;
     }
     if (has_bias)
-        out[gid] += bias[od];
+        sum += bias[od];
+    out[gid] = sum;
 }
 
 kernel void backward_dx(
@@ -137,7 +136,7 @@ kernel void backward_dx(
         for (int hi = wh, ohi = oh; hi >= 0 && ohi < out_h; hi -= h_s, ohi++)
             for (int wi = ww, owi = ow; wi >= 0 && owi < out_w; wi -= w_s, owi++) {
                 if (ohi >= 0 && owi >= 0) {
-                    sum += w[hi * w_w + wi] * dout_now[ohi * out_w + owi];
+                    sum += weight[hi * w_w + wi] * dout_now[ohi * out_w + owi];
                 }
             }
 
