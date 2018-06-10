@@ -8,187 +8,190 @@ namespace opencl_kernel
 
 std::string avg_pool_kernel_code{R"(
 
-typedef unsigned int size_t;
-typedef float value_type;
-
-kernel size_t get_index(size_t w, size_t h, size_t d, size_t x, size_t y, size_t z)
-{
-    return (z * h + y) * w + x;
-}
+typedef double value_type;
 
 kernel void forward(
-    size_t sample_count,
-    size_t in_w,
-    size_t in_h,
-    size_t in_d,
-    size_t out_w,
-    size_t out_h,
-    size_t out_d,
-    size_t w_w,
-    size_t w_h,
-    size_t w_s,
-    bool has_bias,
-    global int const* table,
+    int in_w,
+    int in_h,
+    int in_d,
+    int out_w,
+    int out_h,
+    int out_d,
+    int pool_w,
+    int pool_h,
+    int stride,
+    // int has_bias,
     global value_type const* in_data,
     global value_type const* w,
     global value_type const* bias,
-    global value_type* out_data
+    global value_type* out
 )
 {
-    // (sample_count, out_d, out_h, out_w)
-    // (sample,       od,    y,     x)
-    size_t out_size = out_d * out_h * out_w;
-    size_t out_area = out_h * out_w;
-    size_t id = get_global_id(0);
-    size_t sample = id / out_size;
-    id %= out_size;
-    size_t od = id / area;
-    id %= area;
-    size_t y = id / out_w;
-    id %= out_w;
-    size_t x = id;
+    int in_size = in_d * in_h * in_w;
+    int in_area = in_h * in_w;
+    int out_size = out_d * out_h * out_w;
+    int out_area = out_h * out_w;
+    int pool_area = pool_w * pool_h;
 
-    global value_type const* in = in_data + sample * (in_w * in_h * in_d);
-    global value_type* out = out_data + sample * out_size
-        + get_index(out_w, out_h, out_d, x, y, od);
+    // (out_h, out_w, out_d, sample_count)
+    // (oh,    ow,    od,    sample)
+    int gid = get_global_id(0);
+    int tid = gid;
+    int sample = tid / out_size;
+    tid %= out_size;
+    int od = tid / out_area;
+    tid %= out_area;
+    int oh = tid / out_w;
+    tid %= out_w;
+    int ow = tid;
 
-    out[0] = 0;
+    int id = od;
+    int ih = oh * stride;
+    int iw = ow * stride;
+    global value_type const* in = in_data + sample * in_size
+        + id * in_area + ih * in_w + iw;
 
-    for (size_t i = 0; i < in_d; i++) {
-        if (!table[od + i * out_d])
-            continue;
-
-        size_t idx = get_index(w_w, w_h, in_d * out_d, 0, 0, in_d * i + od);
-        global value_type const* pw = w + idx;
-        idx = get_index(in_w, in_h, in_d, 0, 0, j);
-        global value_type const* pin = in + idx;
-
-        global value_type const* pin_element = pin_line;
-        global value_type const* pw_element = pw;
-        value_type sum{0};
-
-        for (size_t yi{0}; yi < w_h; yi++) {
-            for (size_t xi{0}; xi < w_w; xi++) {
-                sum += pw_element[xi] * pin_element[xi];
-            }
-            pw_element  += w_w;
-            pin_element += in_w;
-        }
-        out[0] += sum;
+    value_type sum = 0;
+    for (int wh = 0; wh < pool_h && ih + wh < in_h; wh++) {
+        for (int ww = 0; ww < pool_w && iw + ww < in_w; ww++)
+            sum += in[ww];
+        in += in_w;
     }
-    if (has_bias)
-        out[0] += bias[od];
+    sum *= w[od];
+    sum /= value_type(pool_area);
+    // TODO if has_bias
+    sum += bias[od];
+
+    out[gid] = sum;
 }
 
-kernel void backward_x(
-    size_t sample_count,
-    size_t in_w,
-    size_t in_h,
-    size_t in_d,
-    size_t out_w,
-    size_t out_h,
-    size_t out_d,
-    size_t w_w,
-    size_t w_h,
-    size_t w_s,
-    bool has_bias,
-    global int const* table,
-    global value_type const* in_data,
+kernel void backward_dx(
+    int in_w,
+    int in_h,
+    int in_d,
+    int out_w,
+    int out_h,
+    int out_d,
+    int pool_w,
+    int pool_h,
+    int stride,
     global value_type const* w,
-    global value_type* dw,
-    global value_type* db,
     global value_type const* dout,
-    global value_type const* bias,
     global value_type* dx
 )
 {
-    // (sample_count, out_d, out_h, out_w)
-    // (sample,       od,    y,     x)
-    size_t out_size = out_d * out_h * out_w;
-    size_t out_area = out_h * out_w;
-    size_t id = get_global_id(0);
-    size_t sample = id / out_size;
-    id %= out_size;
-    size_t od = id / area;
-    id %= area;
-    size_t y = id / out_w;
-    id %= out_w;
-    size_t x = id;
+    int in_size  = in_d * in_h * in_w;
+    int in_area  = in_h * in_w;
+    int out_size = out_d * out_h * out_w;
+    int out_area = out_h * out_w;
+    int pool_area = pool_w * pool_h;
+    // (in_w, in_h, in_d, sample_count)
+    // (iw,   ih,   id,   sample)
+    int gid = get_global_id(0);
+    int tid = gid;
+    int sample = tid / in_size;
+    tid %= in_size;
+    int id = tid / in_area;
+    tid %= in_area;
+    int ih = tid / in_w;
+    tid %= in_w;
+    int iw = tid;
 
+
+    int od = id;
+    int ow = (iw + 1 - pool_w + stride - 1) / stride;
+    int oh = (ih + 1 - pool_h + stride - 1) / stride;
+    int ww = iw - ow * stride;
+    int wh = ih - oh * stride;
+
+    global value_type const* dout_now = dout + sample * out_size
+        + od * out_area;
+
+    value_type sum = 0;
+    for (int hi = wh, ohi = oh; hi >= 0 && ohi < out_h; hi -= stride, ohi++)
+        for (int wi = ww, owi = ow; wi >= 0 && owi < out_w; wi -= stride, owi++) {
+            if (ohi >= 0 && owi >= 0) {
+                sum += w[od] * dout_now[ohi * out_w + owi] / pool_area;
+            }
+        }
+
+    dx[gid] = sum;
 }
 
-kernel void backward_w(
-    size_t sample_count,
-    size_t in_w,
-    size_t in_h,
-    size_t in_d,
-    size_t out_w,
-    size_t out_h,
-    size_t out_d,
-    size_t w_w,
-    size_t w_h,
-    size_t w_s,
-    bool has_bias,
-    global int const* table,
+kernel void backward_dw(
+    int sample_count,
+    int in_w,
+    int in_h,
+    int in_d,
+    int out_w,
+    int out_h,
+    int out_d,
+    int pool_w,
+    int pool_h,
+    int stride,
     global value_type const* in_data,
-    global value_type const* w,
-    global value_type* dw,
-    global value_type* db,
     global value_type const* dout,
-    global value_type const* bias,
-    global value_type* dx
+    global value_type* dw
 )
 {
-    // (sample_count, out_d, out_h, out_w)
-    // (sample,       od,    y,     x)
-    size_t out_size = out_d * out_h * out_w;
-    size_t out_area = out_h * out_w;
-    size_t id = get_global_id(0);
-    size_t sample = id / out_size;
-    id %= out_size;
-    size_t od = id / area;
-    id %= area;
-    size_t y = id / out_w;
-    id %= out_w;
-    size_t x = id;
+    int pool_area   = pool_h * pool_w;
+    int in_size  = in_d * in_h * in_w;
+    int in_area  = in_h * in_w;
+    int out_size = out_d * out_h * out_w;
+    int out_area = out_h * out_w;
 
+    int gid = get_global_id(0);
+    int tid = gid;
+    int id = gid;
+    int od = id;
+
+    value_type sum = 0;
+    for (int sample = 0; sample < sample_count; sample++) {
+        global value_type const* in = in_data + sample * in_size
+            + id * in_area;
+        global value_type const* dout_now = dout + sample * out_size
+            + od * out_area;
+
+        for (int oh = 0; oh < out_h; oh++)
+        for (int ow = 0; ow < out_w; ow++) {
+            value_type tsum = 0;
+            for (int ih = oh * stride, w = 0; w < pool_h && ih < in_h; w++, ih++)
+            for (int iw = ow * stride, h = 0; h < pool_h && iw < in_w; h++, iw++)
+                tsum += in[ih * in_w + iw];
+            tsum /= pool_area;
+            sum += tsum * dout_now[oh * out_w + ow];
+        }
+    }
+    dw[gid] = sum;
 }
 
-kernel void backward_b(
-    size_t sample_count,
-    size_t in_w,
-    size_t in_h,
-    size_t in_d,
-    size_t out_w,
-    size_t out_h,
-    size_t out_d,
-    size_t w_w,
-    size_t w_h,
-    size_t w_s,
-    bool has_bias,
-    global int const* table,
-    global value_type const* in_data,
-    global value_type const* w,
-    global value_type* dw,
-    global value_type* db,
+kernel void backward_db(
+    int sample_count,
+    int out_w,
+    int out_h,
+    int out_d,
     global value_type const* dout,
-    global value_type const* bias,
-    global value_type* dx
+    global value_type* db
 )
 {
-    // (sample_count, out_d, out_h, out_w)
-    // (sample,       od,    y,     x)
-    size_t out_size = out_d * out_h * out_w;
-    size_t out_area = out_h * out_w;
-    size_t id = get_global_id(0);
-    size_t sample = id / out_size;
-    id %= out_size;
-    size_t od = id / area;
-    id %= area;
-    size_t y = id / out_w;
-    id %= out_w;
-    size_t x = id;
+    int out_size = out_d * out_h * out_w;
+    int out_area = out_h * out_w;
 
+    int gid = get_global_id(0);
+    int tid = gid;
+    int id = gid;
+    int od = id;
+
+    value_type sum = 0;
+    for (int sample = 0; sample < sample_count; sample++) {
+        global value_type const* dout_now = dout + sample * out_size
+            + od * out_area;
+
+        for (int oh = 0; oh < out_h; oh++)
+        for (int ow = 0; ow < out_w; ow++)
+            sum += dout_now[oh * out_w + ow];
+    }
+    db[gid] = sum;
 }
 
 )"};
