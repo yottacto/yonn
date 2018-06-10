@@ -6,7 +6,7 @@ namespace yonn
 namespace opencl_kernel
 {
 
-std::string avg_pool_kernel_code{R"(
+inline std::string avg_pool_kernel_code{R"(
 
 typedef double value_type;
 

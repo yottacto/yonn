@@ -6,7 +6,7 @@ namespace yonn
 namespace opencl_kernel
 {
 
-std::string const conv_kernel_code{R"(
+inline std::string const conv_kernel_code{R"(
 
 // typedef float value_type;
 typedef double value_type;
