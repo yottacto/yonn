@@ -22,7 +22,8 @@ struct average_pooling_layer : layer
         size_t pool_width,
         size_t pool_height,
         size_t stride,
-        bool has_bias = true
+        bool has_bias = true,
+        core::backend_type backend = core::layer_default_engine()
     ) :
         // FIXME layer need backend
         layer(std_input_types(has_bias), {data_type::data}),
@@ -62,14 +63,18 @@ struct average_pooling_layer : layer
         size_t width,
         size_t height,
         size_t in_channels,
-        size_t pool_size
+        size_t pool_size,
+        core::backend_type backend = core::layer_default_engine(),
+        bool has_bias = true
     ) : average_pooling_layer(
         width,
         height,
         in_channels,
         pool_size,
         pool_size,
-        height == 1 ? 1 : pool_size
+        height == 1 ? 1 : pool_size,
+        has_bias,
+        backend
     ) {}
 
     average_pooling_layer(
@@ -77,14 +82,18 @@ struct average_pooling_layer : layer
         size_t height,
         size_t in_channels,
         size_t pool_size,
-        size_t stride
+        size_t stride,
+        bool has_bias = true,
+        core::backend_type backend = core::layer_default_engine()
     ) : average_pooling_layer(
         width,
         height,
         in_channels,
         pool_size,
         pool_size,
-        stride
+        stride,
+        has_bias,
+        backend
     ) {}
 
     auto name() const -> std::string override
