@@ -23,7 +23,7 @@ namespace kernel
 struct convolutional_op : framework::op_kernel
 {
     using fk_type = cl::make_kernel<
-        size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, bool,
+        int, int, int, int, int, int, int, int, int, int, int, int,
         cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
@@ -37,11 +37,17 @@ struct convolutional_op : framework::op_kernel
         if (!opencl_kernel_initialized) {
             sources.emplace_back(opencl_kernel::conv_kernel_code.c_str(), opencl_kernel::conv_kernel_code.size());
             program = cl::Program{eng.context, sources};
+            if (program.build({eng.default_device}) != CL_SUCCESS) {
+                // FIXME
+                std::cerr << "Error building: "
+                    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(eng.default_device) << "\n";
+                throw;
+            }
 
             auto bsize = sizeof(int) * params.weight.depth;
             table = cl::Buffer{eng.context, CL_MEM_READ_WRITE, bsize};
 
-            std::vector<int> table_data(params.weight.depth);
+            std::vector<int> table_data(params.weight.depth, 1);
             if (!params.tb.is_empty())
                 std::copy(std::begin(params.tb.connected), std::end(params.tb.connected), std::begin(table_data));
             eng.queue.enqueueWriteBuffer(table, CL_TRUE, 0, bsize, table_data.data());
@@ -63,7 +69,6 @@ struct convolutional_op : framework::op_kernel
         ignore(united_backend);
 
         auto const engine = context.engine();
-
         if (engine == core::backend_type::internal) {
             using data_type = tensor;
             data_type const& in_data = *std::get<data_type*>(context.input(0));
@@ -92,7 +97,8 @@ struct convolutional_op : framework::op_kernel
                 params.out.depth,
                 params.weight.width,
                 params.weight.height,
-                params.weight.depth,
+                params.w_stride,
+                params.h_stride,
                 params.has_bias,
                 table, in_data, w, bias, out_data
             ).wait();
@@ -119,17 +125,17 @@ struct convolutional_op : framework::op_kernel
 struct convolutional_grad_op : framework::op_kernel
 {
     using bk_dx_type = cl::make_kernel<
-        size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t,
+        int, int, int, int, int, int, int, int, int, int, int,
         cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
     using bk_dw_type = cl::make_kernel<
-        size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t, size_t,
+        int, int, int, int, int, int, int, int, int, int, int,
         cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
     using bk_db_type = cl::make_kernel<
-        size_t, size_t, size_t, size_t,
+        int, int, int, int,
         cl::Buffer&, cl::Buffer&
     >;
 
@@ -143,11 +149,17 @@ struct convolutional_grad_op : framework::op_kernel
         if (!opencl_kernel_initialized) {
             sources.emplace_back(opencl_kernel::conv_kernel_code.c_str(), opencl_kernel::conv_kernel_code.size());
             program = cl::Program{eng.context, sources};
+            if (program.build({eng.default_device}) != CL_SUCCESS) {
+                // FIXME
+                std::cerr << "Error building: "
+                    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(eng.default_device) << "\n";
+                throw;
+            }
 
             auto bsize = sizeof(int) * params.weight.depth;
             table = cl::Buffer{eng.context, CL_MEM_READ_WRITE, bsize};
 
-            std::vector<int> table_data(params.weight.depth);
+            std::vector<int> table_data(params.weight.depth, 1);
             if (!params.tb.is_empty())
                 std::copy(std::begin(params.tb.connected), std::end(params.tb.connected), std::begin(table_data));
             eng.queue.enqueueWriteBuffer(table, CL_TRUE, 0, bsize, table_data.data());
@@ -233,6 +245,8 @@ struct convolutional_grad_op : framework::op_kernel
                 params.out.depth,
                 dout, db
             ).wait();
+
+            // throw;
 
         } else {
             // TODO not support backend engine
