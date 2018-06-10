@@ -27,10 +27,6 @@ void print(yonn::tensor const& t)
 
 int main()
 {
-    using conv    = yonn::convolutional_layer;
-    auto opencl   = yonn::core::backend_type::opencl;
-    auto internal = yonn::core::backend_type::internal;
-
     // auto l = conv(4, 4, 2, 1, 1);
     // std::vector<yonn::tensor> in{
     //     {{
@@ -123,9 +119,13 @@ int main()
     // random_generate(dout);
 
 
+    using conv    = yonn::convolutional_layer;
+    auto opencl   = yonn::core::backend_type::opencl;
+    auto internal = yonn::core::backend_type::internal;
+
     yonn::network<yonn::topo::sequential> net;
     auto& eng = net.net.eng;
-    auto& e = std::get<yonn::core::engine::opencl>(eng);
+    auto& e   = std::get<yonn::core::engine::opencl>(eng);
 
     auto back = opencl;
     auto l = conv(4, 4, 2, 2, 3, back);
