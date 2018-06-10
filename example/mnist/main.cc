@@ -56,14 +56,22 @@ int main()
         test_labels
     );
 
-    yonn::network<yonn::topo::sequential> net;
+    auto internal = yonn::core::backend_type::internal;
+    auto opencl   = yonn::core::backend_type::opencl;
+
+    yonn::ignore(internal);
+    yonn::ignore(opencl);
+
+    auto back = internal;
+    yonn::network<yonn::topo::sequential> net{back};
 
     net << conv(32, 32, 5, 1, 6)
         << leaky_relu()
         << avg_pool(28, 28, 6, 2)
         << leaky_relu()
         << conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
-        << leaky_relu()
+        // << conv(14, 14, 5, 6, 16)
+        << leaky_relu(opencl)
         << avg_pool(10, 10, 16, 2)
         << leaky_relu()
         << conv(5, 5, 5, 16, 120)
@@ -73,11 +81,15 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-    // auto cut = 2000;
-    // train_images.resize(cut);
-    // train_labels.resize(cut);
+    auto cut = 4000;
+    train_images.resize(cut);
+    train_labels.resize(cut);
 
-    auto mini_batch_size = 8;
+    test_images.resize(100);
+    test_labels.resize(100);
+
+
+    auto mini_batch_size = 1;
 
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
@@ -137,36 +149,36 @@ int main()
 
     // yonn::optimizer::adam optimizer;
     // yonn::optimizer::adagrad optimizer;
-    yonn::optimizer::nesterov_momentum optimizer;
-    optimizer.alpha = 0.004;
+    // yonn::optimizer::nesterov_momentum optimizer;
+    yonn::optimizer::naive optimizer;
+    optimizer.alpha = 0.1;
 
     optimizer.alpha *= std::min(
         yonn::value_type(4),
         static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
     );
 
+    // debug info
+    auto print = [](auto const& v) {
+        for (auto i : v)
+            std::cerr << std::fixed << std::setprecision(10) << i << " ";
+        std::cerr << "\n";
+    };
+
     net.train<yonn::loss_function::mse>(
         optimizer,
         train_images,
         train_labels,
         mini_batch_size,
-        8,
+        1,
         each_batch,
         each_epoch
     );
 
-    // test_images.resize(100);
-    // test_labels.resize(100);
+    // print(net.net.all_nodes[10]->output[0]->data[0]);
 
-    // debug info
-    // auto print = [](auto const& v) {
-    //     for (auto i : v)
-    //         std::cerr << i << " ";
-    //     std::cerr << "\n";
-    // };
+
     // auto id = 10;
-    // std::cerr << net.net.all_nodes[id]->input[1]->data[0].size() << "\n";
-    // // print(net.net.all_nodes[id]->input[1]->data[0]);
     // std::cout << "-> " << test_labels[0] << " "
     //     << net.forward_prop_max_index(test_images[0]) << "\n";
     // print(net.forward_propagation(test_images[0])[0]);

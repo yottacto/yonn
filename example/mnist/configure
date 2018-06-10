@@ -18,10 +18,10 @@ my $compiler__bin = "clang++";
 my $compiler__flags__standard = "c++17";
 my $compiler__flags__optimization_level = "3";
 my $compiler__flags__architecture = "native";
-my @compiler__flags__extra = qw[-Wall -Wextra -fopenmp -lOpenCL -I../../src/ -DUSE_OPENMP=false];
+my @compiler__flags__extra = qw[-Wall -Wextra -I../../src/ -DUSE_OPENMP=false];
 
 my $loader__bin = "clang++";
-my @loader__flags__extra = qw[-fopenmp -lOpenCL];
+my @loader__flags__extra = qw[-lOpenCL];
 
 my $build__config_path = "build.pl";
 my $build__cache_path = "build.cache";
