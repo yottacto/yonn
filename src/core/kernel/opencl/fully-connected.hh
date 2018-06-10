@@ -94,17 +94,17 @@ kernel void backward_db(
     global value_type* db
 )
 {
-    int od = get_global_id(0);
+    // out_size
+    int oi = get_global_id(0);
 
     value_type sum = 0;
+    global value_type const* dout_now = dout;
     for (int sample = 0; sample < sample_count; sample++) {
-        global value_type const* dout_now = dout + sample * out_size;
-
-        for (int i = 0; i < out_size; i++)
-            sum += dout_now[i];
+        sum += dout_now[oi];
+        dout_now += out_size;
     }
 
-    db[od] = sum;
+    db[oi] = sum;
 }
 
 )"};
