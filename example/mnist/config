@@ -7,3 +7,5 @@ alpha           0.06
 train_cut       0
 test_cut        0
 
+epoch           1
+

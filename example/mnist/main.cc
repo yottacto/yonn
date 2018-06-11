@@ -74,6 +74,7 @@ int main()
     auto alpha = 0.1;
     auto train_cut = 10000;
     auto test_cut = 10000;
+    auto epoch = 0;
 
     {
         std::fstream fin{"config"};
@@ -98,6 +99,9 @@ int main()
                 buf >> test_cut;
                 if (!test_cut)
                     test_cut = test_images.size();
+            } else if (name == "epoch") {
+                buf >> epoch;
+                epoch--;
             }
         }
 
@@ -111,6 +115,7 @@ int main()
         );
         INFO(std::setw(width) << "mini_batch_size: ", mini_batch_size);
         INFO(std::setw(width) << "alpha: ", alpha);
+        INFO(std::setw(width) << "epoch: ", epoch+1);
 
         std::cerr << "\n";
     }
@@ -171,15 +176,12 @@ int main()
         }
     };
 
-    auto epoch = 0;
     auto first_epoch = true;
     auto each_epoch = [&](auto last = false) {
         // result for test images
         if (!first_epoch) {
             yonn::util::progress_display test_pd(test_images.size());
-            std::cerr << COLOR_ACT << "testing"
-                << COLOR_ARG << " (" << test_images.size() << ") images:\n"
-                << COLOR_RST;
+            INFO("testing", " (" << test_images.size() << ") images:\n");
 
             auto each_test = [&](auto last = false) {
                 test_pd.tick();
@@ -203,12 +205,8 @@ int main()
         if (last)
             std::cerr << "\nall epoches completed.\n";
         else {
-            std::cerr << COLOR_ACT << "epoch: "
-                << COLOR_ARG << epoch++ << "\n"
-                << COLOR_RST;
-            std::cerr << COLOR_ACT << "training"
-                << COLOR_ARG << " (" << train_images.size() << ") images:\n"
-                << COLOR_RST;
+            INFO("epoch: ", epoch++);
+            INFO("training", " (" << train_images.size() << ") images:\n");
         }
     };
 
