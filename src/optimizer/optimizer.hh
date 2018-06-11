@@ -1,6 +1,14 @@
 #pragma once
+#include <iostream>
+
 #include <cmath>
+#include <memory>
+#include <CL/cl.hpp>
+#include "core/backend.hh"
+#include "util/util.hh"
 #include "type.hh"
+
+#include "opencl/optimizer.hh"
 
 namespace yonn
 {
@@ -9,20 +17,69 @@ namespace optimizer
 
 struct optimizer
 {
-    optimizer()                 = default;
-    optimizer(optimizer const&) = default;
-    optimizer(optimizer&&)      = default;
-    optimizer& operator=(optimizer const&) = default;
-    optimizer& operator=(optimizer&&)      = default;
+    optimizer()
+    {
+    }
+
+    void init_opencl(core::engine::opencl& eng)
+    {
+        if (!opencl_initialized) {
+            sources.emplace_back(
+                opencl_kernel::optimizer_kernel_code.c_str(),
+                opencl_kernel::optimizer_kernel_code.size()
+                );
+            program = cl::Program{eng.context, sources};
+            if (program.build({eng.default_device}) != CL_SUCCESS) {
+                // FIXME
+                std::cerr << "Error building: "
+                    << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(eng.default_device) << "\n";
+                throw;
+            }
+            opencl_initialized = true;
+        }
+    }
+
+    // TODO unique_ptr, non-copyable
+    // optimizer(optimizer const&) = default;
+    // optimizer(optimizer&&)      = default;
+    // optimizer& operator=(optimizer const&) = default;
+    // optimizer& operator=(optimizer&&)      = default;
 
     virtual ~optimizer() = default;
     virtual void update(vec_t const& dw, vec_t& w) = 0;
+
+    virtual void update(
+        cl::Buffer& dw,
+        cl::Buffer& w,
+        core::engine::opencl& e,
+        size_t size
+    )
+    {
+        ignore(dw);
+        ignore(w);
+        ignore(e);
+        ignore(size);
+        // TODO if not implemented, can't call this
+        throw;
+    }
+
     virtual void reset() {}
+
+    bool opencl_initialized{false};
+    cl::Program::Sources sources;
+    cl::Program program;
 };
 
 struct naive : optimizer
 {
-    naive(value_type alpha = 0.01) : alpha{alpha} {}
+    using kernel_type = cl::make_kernel<
+        value_type,
+        cl::Buffer&, cl::Buffer&
+    >;
+
+    naive(value_type alpha = 0.01) : alpha{alpha}
+    {
+    }
 
     void update(vec_t const& dw, vec_t& w) override
     {
@@ -30,7 +87,25 @@ struct naive : optimizer
             w[i] -= alpha * dw[i];
     }
 
+    void update(cl::Buffer& dw, cl::Buffer& w, core::engine::opencl& e, size_t size) override
+    {
+        if (!opencl_kernel_initialized) {
+            optimizer::init_opencl(e);
+            kernel = std::make_unique<kernel_type>(program, "naive");
+            opencl_kernel_initialized = true;
+        }
+        (*kernel)(
+            cl::EnqueueArgs{e.queue, cl::NDRange(size)},
+            alpha,
+            dw,
+            w
+        ).wait();
+    }
+
     value_type alpha;
+
+    bool opencl_kernel_initialized{false};
+    std::unique_ptr<kernel_type> kernel;
 };
 
 template <int N>
