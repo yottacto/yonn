@@ -9,7 +9,7 @@ namespace opencl_kernel
 inline std::string const conv_kernel_code{R"(
 
 // #include "typedef.hh"
-typedef double value_type;
+typedef float value_type;
 
 int get_index(int w, int h, int d, int x, int y, int z)
 {

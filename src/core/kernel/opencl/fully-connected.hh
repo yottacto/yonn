@@ -9,7 +9,7 @@ namespace opencl_kernel
 inline std::string fully_kernel_code{R"(
 
 // #include "typedef.hh"
-typedef double value_type;
+typedef float value_type;
 
 kernel void forward(
     int in_size,

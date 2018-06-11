@@ -9,7 +9,7 @@ namespace opencl_kernel
 inline std::string gradient_kernel_code{R"(
 
 // #include "../../core/kernel/opencl/typedef.hh"
-typedef double value_type;
+typedef float value_type;
 
 kernel void mse(
     int sample_count,

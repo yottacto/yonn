@@ -1,4 +1,4 @@
 #pragma once
 
-typedef double value_type;
+typedef float value_type;
 

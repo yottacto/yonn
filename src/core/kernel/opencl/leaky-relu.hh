@@ -9,7 +9,7 @@ namespace opencl_kernel
 inline std::string leaky_relu_kernel_code{R"(
 
 // #include "typedef.hh"
-typedef double value_type;
+typedef float value_type;
 
 kernel void forward(
     value_type epsilon,

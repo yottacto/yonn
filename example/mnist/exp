@@ -1,0 +1,19 @@
+# time for 1 epoch
+
+double internal
+train: 77.9227s
+test: 3.74s
+
+double opencl
+train: 57.9528s
+test: 4.20s
+
+
+float internal
+train: 76.5108s
+test: 3.59s
+
+float opencl
+train: 47.9489s
+test: 3.41s
+
