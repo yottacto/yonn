@@ -15,11 +15,12 @@ namespace util
         using duration_type = std::chrono::duration<elapsed_type>;
 
         void start() { _start = clock_type::now(); }
+
         void stop()
         {
             _end = clock_type::now();
             duration_type elapsed = _end - _start;
-            tot = elapsed.count();
+            tot += elapsed.count();
         }
 
         void reset()
@@ -40,7 +41,7 @@ namespace util
     private:
         time_point_type _start;
         time_point_type _end;
-        elapsed_type tot;
+        elapsed_type tot{0};
     };
 
 } // namespace util

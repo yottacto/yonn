@@ -11,6 +11,8 @@
 #include "optimizer/optimizer.hh"
 #include "core/backend.hh"
 
+#include "util/timer.hh"
+
 namespace yonn
 {
 namespace topo
@@ -144,8 +146,14 @@ void sequential::backward(cl::Buffer&)
 {
     // own_nodes.back()->output[0]->grad_buffer = first;
 
-    for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
+    auto count = 0;
+    for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l) {
+        util::timer t;
+        t.start();
         (*l)->backward(eng, united_backend);
+        t.stop();
+        // std::cerr << "back: " << count++ << "  === " << t.elapsed_seconds() << "\n";
+    }
 }
 
 void sequential::update_weight(optimizer::optimizer* opt)

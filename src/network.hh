@@ -12,6 +12,7 @@
 #include "loss-function/loss-function.hh"
 #include "topo/sequential.hh"
 #include "util/util.hh"
+#include "util/timer.hh"
 
 namespace yonn
 {
@@ -79,7 +80,10 @@ struct network
 
     auto forward_propagation(tensor const& input) -> std::variant<tensor*, cl::Buffer*>
     {
-        return net.forward(input);
+        forward_timer.start();
+        auto ret = net.forward(input);
+        forward_timer.stop();
+        return ret;
     }
 
     auto forward_prop_max_index(vec_t const& input) -> label_t
@@ -105,13 +109,16 @@ struct network
             using data_type = tensor;
             auto& out = std::get<data_type*>(output);
             tensor delta = loss_function::gradient<Error>(*out, desired_output);
+            backward_timer.start();
             net.backward(delta);
+            backward_timer.stop();
         } else if (backend == core::backend_type::opencl) {
             using data_type = cl::Buffer;
             auto& out = *std::get<data_type*>(output);
             auto& e = std::get<core::engine::opencl>(net.eng);
             auto out_size = net.out_size();
             auto& grad_buffer = net.all_nodes.back()->output[0]->grad_buffer;
+            backward_timer.start();
             std::any_cast<loss_function::opencl_gradient<Error>>(cl_gradient)
                 .gradient(
                     out,
@@ -121,6 +128,7 @@ struct network
                     e
                 );
             net.backward(grad_buffer);
+            backward_timer.stop();
         }
     }
 
@@ -156,6 +164,10 @@ struct network
     tensor in_batch;
     std::vector<label_t> desired_out_batch;
     std::any cl_gradient;
+
+    util::timer forward_timer;
+    util::timer backward_timer;
+    util::timer update_weight_timer;
 };
 
 template <class Layer>
@@ -208,6 +220,16 @@ auto network<Net>::train(
             each_batch(false);
         }
         each_batch(true);
+
+        std::cerr << "forward:\t\t"
+            << forward_timer.elapsed_seconds() << "s.\n";
+        std::cerr << "backward:\t\t"
+            << backward_timer.elapsed_seconds() << "s.\n";
+        std::cerr << "weight update:\t\t"
+            << update_weight_timer.elapsed_seconds() << "s.\n";
+        forward_timer.reset();
+        backward_timer.reset();
+        update_weight_timer.reset();
     }
     each_epoch(true);
 
@@ -233,7 +255,9 @@ void network<Net>::train_once(
             forward_propagation({*inputs}),
             {*desired_outputs}
         );
+        update_weight_timer.start();
         net.update_weight(&optimizer);
+        update_weight_timer.stop();
     } else {
         train_onebatch<Error>(optimizer, inputs, desired_outputs, size);
     }
@@ -259,7 +283,9 @@ void network<Net>::train_onebatch(
         forward_propagation(in_batch),
         desired_out_batch
     );
+    update_weight_timer.start();
     net.update_weight(&optimizer);
+    update_weight_timer.stop();
 }
 
 } // namespace yonn
