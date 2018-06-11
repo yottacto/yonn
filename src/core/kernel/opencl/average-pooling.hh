@@ -9,7 +9,7 @@ namespace opencl_kernel
 inline std::string avg_pool_kernel_code{R"(
 
 // #include "typedef.hh"
-typedef float value_type;
+typedef double value_type;
 
 kernel void forward(
     int in_w,
@@ -132,7 +132,8 @@ kernel void backward_dw(
     int stride,
     global value_type const* in_data,
     global value_type const* dout,
-    global value_type* dw
+    global value_type* dw,
+    local value_type* lsum
 )
 {
     int pool_area   = pool_h * pool_w;
@@ -143,27 +144,40 @@ kernel void backward_dw(
 
     int gid = get_global_id(0);
     int tid = gid;
-    int id = gid;
+    int id = gid / get_local_size(0);
     int od = id;
 
-    value_type sum = 0;
-    for (int sample = 0; sample < sample_count; sample++) {
-        global value_type const* in = in_data + sample * in_size
-            + id * in_area;
-        global value_type const* dout_now = dout + sample * out_size
-            + od * out_area;
+    int lid = get_local_id(0);
+    int local_id = lid;
+    int sample = lid / out_area;
+    lid %= out_area;
+    int oh = lid / out_w;
+    int ow = lid % out_w;
 
-        for (int oh = 0; oh < out_h; oh++)
-        for (int ow = 0; ow < out_w; ow++) {
-            value_type tsum = 0;
-            for (int ih = oh * stride, w = 0; w < pool_h && ih < in_h; w++, ih++)
-            for (int iw = ow * stride, h = 0; h < pool_h && iw < in_w; h++, iw++)
-                tsum += in[ih * in_w + iw];
-            tsum /= pool_area;
-            sum += tsum * dout_now[oh * out_w + ow];
-        }
+    global value_type const* in = in_data + sample * in_size
+        + id * in_area;
+    global value_type const* dout_now = dout + sample * out_size
+        + od * out_area;
+
+    value_type tsum = 0;
+    for (int ih = oh * stride, w = 0; w < pool_h && ih < in_h; w++, ih++)
+    for (int iw = ow * stride, h = 0; h < pool_h && iw < in_w; h++, iw++)
+        tsum += in[ih * in_w + iw];
+
+    tsum /= (value_type)pool_area;
+    tsum *= dout_now[oh * out_w + ow];
+
+    lsum[local_id] = tsum;
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    if (local_id == 0) {
+        value_type sum = 0;
+        for (int i = 0; i < get_local_size(0); i++)
+            sum += lsum[i];
+        dw[gid / get_local_size(0)] = sum;
     }
-    dw[gid] = sum;
+
+    // barrier(CLK_LOCAL_MEM_FENCE);
 }
 
 kernel void backward_db(
