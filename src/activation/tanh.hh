@@ -18,12 +18,10 @@ namespace activation
 struct tanh : layer
 {
     using fk_type = cl::make_kernel<
-        value_type,
         cl::Buffer&, cl::Buffer&
     >;
 
     using bk_type = cl::make_kernel<
-        value_type,
         cl::Buffer&, cl::Buffer&, cl::Buffer&
     >;
 
