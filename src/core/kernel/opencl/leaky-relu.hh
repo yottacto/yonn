@@ -20,7 +20,7 @@ kernel void forward(
     // (i,       sample)
     int gid = get_global_id(0);
 
-    out[gid] = in[gid] > 0 ? in[gid] : epsilon * in[gid];
+    out[gid] = in[gid] > (value_type)(0) ? in[gid] : epsilon * in[gid];
 }
 
 kernel void backward(
@@ -34,7 +34,8 @@ kernel void backward(
     // (i,       sample)
     int gid = get_global_id(0);
 
-    dx[gid] = dout[gid] * (out[gid] > 0 ? 1 : epsilon);
+    dx[gid] = dout[gid]
+        * (out[gid] > (value_type)(0) ? (value_type)(1) : epsilon);
 }
 
 )"};
