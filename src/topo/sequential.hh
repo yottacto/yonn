@@ -4,6 +4,8 @@
 #include <iostream>
 
 #include <vector>
+#include <variant>
+#include <CL/cl.hpp>
 #include "nodes.hh"
 #include "tensor.hh"
 #include "optimizer/optimizer.hh"
@@ -52,9 +54,18 @@ struct sequential : nodes<sequential>
     }
 
     void allocate_nsamples(size_t batch_size);
-    auto forward(tensor const& first) -> tensor;
+    auto get_output_tensor() -> tensor;
+
+    auto forward(tensor const& first) -> std::variant<tensor*, cl::Buffer*>;
     void backward(tensor const& first);
+    void backward(cl::Buffer&);
+
     void update_weight(optimizer::optimizer* opt);
+
+    auto out_size() const -> size_t
+    {
+        return all_nodes.back()->output[0]->data[0].size();
+    }
 
     // debug info
     // TODO pass outstream
@@ -75,6 +86,9 @@ struct sequential : nodes<sequential>
     core::backend_type backend;
     core::engine::engine_type eng;
     bool united_backend{true};
+
+    // TODO return value of forward(...), in case of dangling pointer
+    tensor out_data;
 };
 
 void sequential::allocate_nsamples(size_t batch_size)
@@ -90,24 +104,45 @@ void sequential::allocate_nsamples(size_t batch_size)
     }
 }
 
-auto sequential::forward(tensor const& first) -> tensor
+auto sequential::get_output_tensor() -> tensor
+{
+    tensor out_data;
+    all_nodes.back()->output_data(out_data, eng);
+    return out_data;
+}
+
+auto sequential::forward(tensor const& first) -> std::variant<tensor*, cl::Buffer*>
 {
     all_nodes.front()->set_input_data(first, eng);
 
     for (auto const& l : all_nodes)
         l->forward(eng, united_backend);
 
-    tensor out_data;
-    // FIXME
-    // TODO output channel index?
-    all_nodes.back()->output_data(out_data, eng);
-    // TODO normalize output
-    return out_data;
+    std::variant<tensor*, cl::Buffer*> out;
+    if (backend == core::backend_type::internal) {
+        // FIXME
+        // TODO output channel index?
+        all_nodes.back()->output_data(out_data, eng);
+        // TODO normalize output
+        out.emplace<tensor*>(&out_data);
+    } else if (backend == core::backend_type::opencl) {
+        // FIXME access private member?
+        out.emplace<cl::Buffer*>(all_nodes.back()->output[0]->get_data_buffer());
+    }
+    return out;
 }
 
 void sequential::backward(tensor const& first)
 {
     own_nodes.back()->set_output_grad(first, eng);
+
+    for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
+        (*l)->backward(eng, united_backend);
+}
+
+void sequential::backward(cl::Buffer&)
+{
+    // own_nodes.back()->output[0]->grad_buffer = first;
 
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l)
         (*l)->backward(eng, united_backend);

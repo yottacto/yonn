@@ -2,6 +2,8 @@
 // TODO remove this
 #include <iostream>
 
+#include <any>
+#include <variant>
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -26,6 +28,9 @@ struct network
 
     void allocate_nsamples(size_t batch_size)
     {
+        in_batch.resize(batch_size);
+        desired_out_batch.resize(batch_size);
+
         net.allocate_nsamples(batch_size);
     }
 
@@ -67,32 +72,56 @@ struct network
     );
 
     // TODO refactor tensor
-    auto forward_propagation(vec_t const& input) -> tensor
+    auto forward_propagation(vec_t const& input) -> std::variant<tensor*, cl::Buffer*>
     {
         return forward_propagation(tensor{input});
     }
 
-    auto forward_propagation(tensor const& input) -> tensor
+    auto forward_propagation(tensor const& input) -> std::variant<tensor*, cl::Buffer*>
     {
         return net.forward(input);
     }
 
     auto forward_prop_max_index(vec_t const& input) -> label_t
     {
-        return max_index(forward_propagation(input)[0]);
+        if (backend == core::backend_type::internal) {
+            return max_index((*std::get<tensor*>(forward_propagation(input)))[0]);
+        } else if (backend == core::backend_type::opencl) {
+            forward_propagation(input);
+            return max_index(net.get_output_tensor()[0]);
+        } else {
+            // TODO
+            throw;
+        }
     }
 
     template <class Error>
     void backward_propagation(
-        tensor const& output,
+        std::variant<tensor*, cl::Buffer*> const& output,
         std::vector<label_t> const& desired_output
     )
     {
-
-        // std::cerr << "\n> " << Error::f(output[0], desired_output[0]) << "\n";
-
-        tensor delta = loss_function::gradient<Error>(output, desired_output);
-        net.backward(delta);
+        if (backend == core::backend_type::internal) {
+            using data_type = tensor;
+            auto& out = std::get<data_type*>(output);
+            tensor delta = loss_function::gradient<Error>(*out, desired_output);
+            net.backward(delta);
+        } else if (backend == core::backend_type::opencl) {
+            using data_type = cl::Buffer;
+            auto& out = *std::get<data_type*>(output);
+            auto& e = std::get<core::engine::opencl>(net.eng);
+            auto out_size = net.out_size();
+            auto& grad_buffer = net.all_nodes.back()->output[0]->grad_buffer;
+            std::any_cast<loss_function::opencl_gradient<Error>>(cl_gradient)
+                .gradient(
+                    out,
+                    out_size,
+                    desired_output,
+                    grad_buffer,
+                    e
+                );
+            net.backward(grad_buffer);
+        }
     }
 
     template <class EachTest>
@@ -102,6 +131,8 @@ struct network
         EachTest each_test
     ) -> result
     {
+        allocate_nsamples(1);
+
         result res;
         for (size_t sample{0}; sample < inputs.size(); sample++) {
             auto const predicted = forward_prop_max_index(inputs[sample]);
@@ -124,6 +155,7 @@ struct network
     network_type net;
     tensor in_batch;
     std::vector<label_t> desired_out_batch;
+    std::any cl_gradient;
 };
 
 template <class Layer>
@@ -155,10 +187,14 @@ auto network<Net>::train(
     // TODO network phase
     // TODO reset or init weight
 
-    in_batch.resize(batch_size);
-    desired_out_batch.resize(batch_size);
-
     allocate_nsamples(batch_size);
+
+    auto& e = std::get<core::engine::opencl>(net.eng);
+
+    loss_function::opencl_gradient<Error> cl_g{};
+    cl_g.allocate_output(batch_size, e);
+
+    cl_gradient.emplace<loss_function::opencl_gradient<Error>>(cl_g);
 
     for (auto round = 0; round < epoch; round++) {
         each_epoch(false);
