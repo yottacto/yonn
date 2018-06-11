@@ -8,7 +8,7 @@
 #include "util/util.hh"
 #include "type.hh"
 
-#include "opencl/optimizer.hh"
+#include "core/kernel/opencl/optimizer.hh"
 
 namespace yonn
 {

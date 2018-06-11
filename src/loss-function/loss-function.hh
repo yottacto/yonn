@@ -10,7 +10,7 @@
 #include "softmax.hh"
 #include "core/backend.hh"
 
-#include "opencl/gradient.hh"
+#include "core/kernel/opencl/gradient.hh"
 
 namespace yonn
 {
