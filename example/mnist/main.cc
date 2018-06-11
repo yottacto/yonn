@@ -62,10 +62,10 @@ int main()
     yonn::ignore(internal);
     yonn::ignore(opencl);
 
-    auto back = internal;
+    auto back = opencl;
     yonn::network<yonn::topo::sequential> net{back};
 
-    net << conv(32, 32, 5, 1, 6, opencl)
+    net << conv(32, 32, 5, 1, 6)
         << leaky_relu()
         << avg_pool(28, 28, 6, 2)
         << leaky_relu()
@@ -81,7 +81,7 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-    auto cut = 4000;
+    auto cut = 10000;
     train_images.resize(cut);
     train_labels.resize(cut);
 
@@ -159,11 +159,11 @@ int main()
     );
 
     // debug info
-    auto print = [](auto const& v) {
-        for (auto i : v)
-            std::cerr << std::fixed << std::setprecision(10) << i << " ";
-        std::cerr << "\n";
-    };
+    // auto print = [](auto const& v) {
+    //     for (auto i : v)
+    //         std::cerr << std::fixed << std::setprecision(10) << i << " ";
+    //     std::cerr << "\n";
+    // };
 
     net.train<yonn::loss_function::mse>(
         optimizer,
