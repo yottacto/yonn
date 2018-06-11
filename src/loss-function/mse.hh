@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include <CL/cl.hpp>
 #include "type.hh"
 #include "util/util.hh"
 
@@ -11,6 +12,13 @@ namespace loss_function
 // mean-squared-error loss function
 struct mse
 {
+    using kernel_type = cl::make_kernel<
+        int, int,
+        cl::Buffer&, cl::Buffer&, cl::Buffer&
+    >;
+
+    static auto name() { return "mse"; }
+
     static auto f(vec_t const& scores, label_t y) -> value_type
     {
         // FIXME value range in (min, max), this depends on the last layer's
