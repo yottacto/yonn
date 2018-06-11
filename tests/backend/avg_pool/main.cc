@@ -7,8 +7,8 @@
 void random_generate(yonn::tensor& t)
 {
     std::random_device rd;
-    // std::mt19937 gen(rd());
-    std::mt19937 gen(444);
+    std::mt19937 gen(rd());
+    // std::mt19937 gen(444);
     std::uniform_real_distribution<> dis(-1, 1);
     for (auto& v : t)
         for (auto& i : v)
@@ -57,7 +57,6 @@ int main()
     for (auto& i : in)
         random_generate(i);
     random_generate(dout);
-
 
     using avg_pool = yonn::average_pooling_layer;
     auto opencl    = yonn::core::backend_type::opencl;
