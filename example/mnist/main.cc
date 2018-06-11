@@ -65,13 +65,13 @@ int main()
     auto back = internal;
     yonn::network<yonn::topo::sequential> net{back};
 
-    net << conv(32, 32, 5, 1, 6)
+    net << conv(32, 32, 5, 1, 6, opencl)
         << leaky_relu()
         << avg_pool(28, 28, 6, 2)
         << leaky_relu()
         << conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
         // << conv(14, 14, 5, 6, 16)
-        << leaky_relu(opencl)
+        << leaky_relu()
         << avg_pool(10, 10, 16, 2)
         << leaky_relu()
         << conv(5, 5, 5, 16, 120)
