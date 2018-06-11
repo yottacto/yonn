@@ -74,7 +74,7 @@ int main()
     auto alpha = 0.1;
     auto train_cut = 10000;
     auto test_cut = 10000;
-    auto epoch = 0;
+    auto epoch_size = 0;
 
     {
         std::fstream fin{"config"};
@@ -100,8 +100,8 @@ int main()
                 if (!test_cut)
                     test_cut = test_images.size();
             } else if (name == "epoch") {
-                buf >> epoch;
-                epoch--;
+                buf >> epoch_size;
+                epoch_size--;
             }
         }
 
@@ -115,7 +115,7 @@ int main()
         );
         INFO(std::setw(width) << "mini_batch_size: ", mini_batch_size);
         INFO(std::setw(width) << "alpha: ", alpha);
-        INFO(std::setw(width) << "epoch: ", epoch+1);
+        INFO(std::setw(width) << "epoch: ", epoch_size+1);
 
         std::cerr << "\n";
     }
@@ -160,6 +160,7 @@ int main()
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
 
+    auto epoch = 0;
     auto first_batch = true;
     auto each_batch = [&](auto last = false) {
         if (first_batch) {
@@ -222,7 +223,7 @@ int main()
         train_images,
         train_labels,
         mini_batch_size,
-        1,
+        epoch_size,
         each_batch,
         each_epoch
     );

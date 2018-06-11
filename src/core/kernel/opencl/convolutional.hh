@@ -181,7 +181,7 @@ kernel void backward_dw(
     // (w_w, w_h, in_d * out_d)
     // (ww,  wh,  wd)
     int gid = get_global_id(0);
-    int tid = gid / get_local_size(0);
+    int tid = gid / sample_count;
     int wd = tid / w_area;
     tid %= w_area;
     int wh = tid / w_w;
@@ -212,9 +212,9 @@ kernel void backward_dw(
 
     if (sample == 0) {
         value_type tsum = 0;
-        for (int i = 0; i < get_local_size(0); i++)
+        for (int i = 0; i < sample_count; i++)
             tsum += lsum[i];
-        dw[gid / get_local_size(0)] = tsum;
+        dw[gid / sample_count] = tsum;
     }
 }
 

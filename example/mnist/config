@@ -4,8 +4,8 @@ mini_batch_size 32
 alpha           0.06
 
 # 0 means keep all data
-train_cut       0
-test_cut        0
+train_cut       100
+test_cut        100
 
-epoch           1
+epoch           8
 
