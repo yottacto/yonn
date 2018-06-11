@@ -71,8 +71,6 @@ struct leaky_relu : layer
         core::engine::engine_type& eng
     ) override
     {
-        ignore(eng);
-
         // this backend cannot be network_default
         if (this->backend == core::backend_type::network_default)
             layer::set_engine(backend);
@@ -122,7 +120,10 @@ void leaky_relu::allocate_nsamples_opencl(size_t batch_size, core::engine::openc
 void leaky_relu::init_opencl_kernel(core::engine::opencl& eng)
 {
     if (!opencl_kernel_initialized) {
-        sources.emplace_back(opencl_kernel::leaky_relu_kernel_code.c_str(), opencl_kernel::leaky_relu_kernel_code.size());
+        sources.emplace_back(
+            opencl_kernel::leaky_relu_kernel_code.c_str(),
+            opencl_kernel::leaky_relu_kernel_code.size()
+        );
         program = cl::Program{eng.context, sources};
         if (program.build({eng.default_device}) != CL_SUCCESS) {
             // FIXME
