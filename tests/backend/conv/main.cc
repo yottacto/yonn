@@ -128,7 +128,7 @@ int main()
     auto& eng = net.net.eng;
     auto& e   = std::get<yonn::core::engine::opencl>(eng);
 
-    auto back = opencl;
+    auto back = internal;
     auto l = conv(4, 4, 2, 2, 3, back);
     l.init_engine(back, eng);
     if (back == internal)
