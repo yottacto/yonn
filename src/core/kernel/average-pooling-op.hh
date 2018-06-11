@@ -232,6 +232,9 @@ struct average_pooling_grad_op : framework::op_kernel
                 dout, db
             ).wait();
 
+            // auto& e = std::get<core::engine::opencl>(eng);
+            // e.queue.flush();
+
         } else {
             // TODO not support backend engine
         }

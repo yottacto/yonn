@@ -77,9 +77,9 @@ inline auto gradient_check(
         v = old;
     }
 
-    auto error = relative_error(std_grad[1], numeric_grad[1]);
-    // for (auto i = 1u; i < std_grad.size(); i++)
-    //     error = std::max(error, relative_error(std_grad[i], numeric_grad[i]));
+    auto error = relative_error(std_grad[0], numeric_grad[0]);
+    for (auto i = 1u; i < std_grad.size(); i++)
+        error = std::max(error, relative_error(std_grad[i], numeric_grad[i]));
     return error;
     // return numeric_grad;
 }

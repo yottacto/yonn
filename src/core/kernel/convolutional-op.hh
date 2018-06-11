@@ -135,7 +135,7 @@ struct convolutional_grad_op : framework::op_kernel
 
     using bk_dw_type = cl::make_kernel<
         int, int, int, int, int, int, int, int, int, int, int,
-        cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&
+        cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::LocalSpaceArg
     >;
 
     using bk_db_type = cl::make_kernel<
@@ -181,7 +181,15 @@ struct convolutional_grad_op : framework::op_kernel
     void init_opencl(core::engine::opencl& eng, std::vector<size_t> const& sizes, size_t sample_count)
     {
         bk_dx_eargs = std::make_unique<cl::EnqueueArgs>(eng.queue, sizes[0]);
-        bk_dw_eargs = std::make_unique<cl::EnqueueArgs>(eng.queue, sizes[1]);
+
+        auto group_size = sample_count;
+        bk_dw_eargs = std::make_unique<cl::EnqueueArgs>(
+            eng.queue,
+            cl::NDRange(sizes[1] * group_size),
+            cl::NDRange(group_size)
+        );
+        local_mem = cl::Local(sizeof(value_type) * group_size);
+
         bk_db_eargs = std::make_unique<cl::EnqueueArgs>(eng.queue, sizes[2]);
         this->sample_count = sample_count;
     }
@@ -242,7 +250,7 @@ struct convolutional_grad_op : framework::op_kernel
                 params.weight.height,
                 params.w_stride,
                 params.h_stride,
-                table, in_data, dout, dw
+                table, in_data, dout, dw, local_mem
             ).wait();
 
             (*bk_db)(*bk_db_eargs,
@@ -252,6 +260,9 @@ struct convolutional_grad_op : framework::op_kernel
                 params.out.depth,
                 dout, db
             ).wait();
+
+            // auto& e = std::get<core::engine::opencl>(eng);
+            // e.queue.flush();
 
             // throw;
 
@@ -279,6 +290,8 @@ struct convolutional_grad_op : framework::op_kernel
     cl::Program::Sources sources;
     cl::Program program;
     cl::Buffer table;
+
+    cl::LocalSpaceArg local_mem;
 };
 
 } // namespace kernel

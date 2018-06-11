@@ -167,7 +167,8 @@ kernel void backward_dw(
     global int const* table,
     global value_type const* in_data,
     global value_type const* dout,
-    global value_type* dw
+    global value_type* dw,
+    local value_type* lsum
 )
 {
     int w_d      = in_d * out_d;
@@ -180,7 +181,7 @@ kernel void backward_dw(
     // (w_w, w_h, in_d * out_d)
     // (ww,  wh,  wd)
     int gid = get_global_id(0);
-    int tid = gid;
+    int tid = gid / get_local_size(0);
     int wd = tid / w_area;
     tid %= w_area;
     int wh = tid / w_w;
@@ -190,18 +191,31 @@ kernel void backward_dw(
     int id = wd % in_d;
     int od = wd / in_d;
 
-    value_type sum = 0;
-    for (int sample = 0; sample < sample_count; sample++) {
-        global value_type const* in = in_data + sample * in_size
-            + id * in_area;
-        global value_type const* dout_now = dout + sample * out_size
-            + od * out_area;
+    int sample = get_local_id(0);
 
-        for (int i = wh, oi = 0; i < in_h && oi < out_w; i += h_s, oi++)
-            for (int j = ww, oj = 0; j < in_w && oj < out_h; j += w_s, oj++)
-                sum += in[i * in_w + j] * dout_now[oi * out_w + oj];
+    value_type sum = 0;
+    // for (int sample = 0; sample < sample_count; sample++) {
+
+    global value_type const* in = in_data + sample * in_size
+        + id * in_area;
+    global value_type const* dout_now = dout + sample * out_size
+        + od * out_area;
+
+    for (int i = wh, oi = 0; i < in_h && oi < out_w; i += h_s, oi++)
+        for (int j = ww, oj = 0; j < in_w && oj < out_h; j += w_s, oj++)
+            sum += in[i * in_w + j] * dout_now[oi * out_w + oj];
+
+    // }
+
+    lsum[sample] = sum;
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    if (sample == 0) {
+        value_type tsum = 0;
+        for (int i = 0; i < get_local_size(0); i++)
+            tsum += lsum[i];
+        dw[gid / get_local_size(0)] = tsum;
     }
-    dw[gid] = sum;
 }
 
 kernel void backward_db(
