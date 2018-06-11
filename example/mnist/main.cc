@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <algorithm>
 #include <string>
 #include <cmath>
@@ -21,6 +22,11 @@ static const bool tb[] = {
 };
 #undef O
 #undef X
+
+#define INFO(act, arg) \
+    std::cerr << COLOR_ACT << act \
+        << COLOR_ARG << arg << "\n" \
+        << COLOR_RST
 
 int main()
 {
@@ -62,7 +68,53 @@ int main()
     yonn::ignore(internal);
     yonn::ignore(opencl);
 
+    // config
     auto back = opencl;
+    auto mini_batch_size = 32;
+    auto alpha = 0.1;
+    auto train_cut = 10000;
+    auto test_cut = 10000;
+
+    {
+        std::fstream fin{"config"};
+        std::string str;
+        while (std::getline(fin, str)) {
+            std::stringstream buf{str};
+            std::string name;
+            buf >> name;
+            if (name == "backend") {
+                int b;
+                buf >> b;
+                back = static_cast<yonn::core::backend_type>(b);
+            } else if (name == "mini_batch_size") {
+                buf >> mini_batch_size;
+            } else if (name == "alpha") {
+                buf >> alpha;
+            } else if (name == "train_cut") {
+                buf >> train_cut;
+                if (!train_cut)
+                    train_cut = train_images.size();
+            } else if (name == "test_cut") {
+                buf >> test_cut;
+                if (!test_cut)
+                    test_cut = test_images.size();
+            }
+        }
+
+        std::cerr << "config:\n";
+        auto const width = 24;
+        INFO(
+            std::setw(width) << "backend: ",
+            (back == yonn::core::backend_type::internal
+                ? "internal"
+                : "opencl")
+        );
+        INFO(std::setw(width) << "mini_batch_size: ", mini_batch_size);
+        INFO(std::setw(width) << "alpha: ", alpha);
+
+        std::cerr << "\n";
+    }
+
     yonn::network<yonn::topo::sequential> net{back};
 
     net << conv(32, 32, 5, 1, 6)
@@ -81,15 +133,24 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-    auto cut = 10000;
-    train_images.resize(cut);
-    train_labels.resize(cut);
+    // yonn::optimizer::adam optimizer;
+    // yonn::optimizer::adagrad optimizer;
+    // yonn::optimizer::nesterov_momentum optimizer;
+    yonn::optimizer::naive optimizer;
+    optimizer.alpha = alpha;
 
-    test_images.resize(100);
-    test_labels.resize(100);
+    // optimizer.alpha *= std::min(
+    //     yonn::value_type(4),
+    //     static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
+    // );
 
 
-    auto mini_batch_size = 1;
+    train_images.resize(train_cut);
+    train_labels.resize(train_cut);
+
+    test_images.resize(test_cut);
+    test_labels.resize(test_cut);
+
 
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
@@ -106,9 +167,7 @@ int main()
         if (last) {
             t.stop();
             std::cerr << "\ntraining completed.\n";
-            std::cerr << COLOR_ACT << "time elapsed: "
-                << COLOR_ARG << t.elapsed_seconds() << "s.\n\n"
-                << COLOR_RST;
+            INFO("time elapsed: ", t.elapsed_seconds() << "s.\n");
         }
     };
 
@@ -130,7 +189,13 @@ int main()
                 }
             };
 
+            yonn::util::timer tt;
+            tt.start();
             net.test(test_images, test_labels, each_test).print_detail(std::cerr);
+            tt.stop();
+
+            INFO("time elapsed: ", tt.elapsed_seconds() << "s.\n");
+
             pd.reset();
             first_batch = true;
         }
@@ -146,17 +211,6 @@ int main()
                 << COLOR_RST;
         }
     };
-
-    // yonn::optimizer::adam optimizer;
-    // yonn::optimizer::adagrad optimizer;
-    // yonn::optimizer::nesterov_momentum optimizer;
-    yonn::optimizer::naive optimizer;
-    optimizer.alpha = 0.1;
-
-    optimizer.alpha *= std::min(
-        yonn::value_type(4),
-        static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
-    );
 
     // debug info
     // auto print = [](auto const& v) {

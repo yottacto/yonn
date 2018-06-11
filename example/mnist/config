@@ -1,0 +1,9 @@
+# internal, opencl
+backend         0
+mini_batch_size 32
+alpha           0.1
+
+# 0 means not cut
+train_cut       0
+test_cut        0
+
