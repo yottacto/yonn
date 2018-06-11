@@ -6,8 +6,9 @@ namespace yonn
 namespace opencl_kernel
 {
 
-std::string tanh_kernel_code{R"(
+inline std::string tanh_kernel_code{R"(
 
+// #include "typedef.hh"
 typedef double value_type;
 
 kernel void forward(

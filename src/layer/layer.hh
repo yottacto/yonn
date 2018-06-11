@@ -60,7 +60,7 @@ struct layer : node
     void set_input_data(std::vector<tensor> const& input, core::engine::engine_type& eng);
     void set_input_data(tensor const& input, core::engine::engine_type& eng);
     void set_output_grad(tensor const& grad, core::engine::engine_type& eng);
-    void output_data(tensor& out);
+    void output_data(tensor& out, core::engine::engine_type& eng);
     auto get_input_data(size_t i) -> tensor&;
     auto get_input_grad() const -> std::vector<tensor>;
 
@@ -71,7 +71,7 @@ struct layer : node
 
     // TODO init weight
 
-    void update_weight(optimizer::optimizer* opt);
+    void update_weight(optimizer::optimizer* opt, core::engine::engine_type& eng);
 
     auto input_shapes()         const -> std::vector<shape3d_t> { return in_shapes;     }
     auto input_shape(size_t i)  const -> shape3d_t              { return in_shapes[i];  }
@@ -170,16 +170,22 @@ void layer::set_output_grad(tensor const& grad, core::engine::engine_type& eng)
 {
     if (backend == core::backend_type::internal) {
         output[0]->grad = grad;
-    } else if (backend == core::backend_type::opencl){
+    } else if (backend == core::backend_type::opencl) {
         output[0]->grad = grad;
         auto& e = std::get<core::engine::opencl>(eng);
         output[0]->set_grad(tensor_to_vector(grad), e);
     }
 }
 
-void layer::output_data(tensor& out)
+void layer::output_data(tensor& out, core::engine::engine_type& eng)
 {
-    out = output[0]->data;
+    if (backend == core::backend_type::internal) {
+        out = output[0]->data;
+    } else if (backend == core::backend_type::opencl) {
+        auto& e = std::get<core::engine::opencl>(eng);
+        vector_to_tensor(output[0]->get_data(e), output[0]->data);
+        out = output[0]->data;
+    }
 }
 
 auto layer::get_input_data(size_t i) -> tensor&
@@ -212,15 +218,25 @@ void layer::reset_output_grad(value_type x)
             i = x;
 }
 
-void layer::update_weight(optimizer::optimizer* opt)
+void layer::update_weight(optimizer::optimizer* opt, core::engine::engine_type& eng)
 {
-    // TODO mark trainable for data, here the input[0] is not trainable
-    for (size_t i{1}; i < in_types.size(); i++) {
-        // TODO deprecated? for now, dw and db only has one outside dimension,
-        // not like input data
-        // input[i]->merge_grads();
-        auto& weight = get_input_data(i)[0];
-        opt->update(input[i]->grad[0], weight);
+    if (backend == core::backend_type::internal) {
+        // TODO mark trainable for data, here the input[0] is not trainable
+        for (size_t i{1}; i < in_types.size(); i++) {
+            // TODO deprecated? for now, dw and db only has one outside dimension,
+            // not like input data
+            // input[i]->merge_grads();
+            auto& weight = get_input_data(i)[0];
+            opt->update(input[i]->grad[0], weight);
+        }
+    } else if (backend == core::backend_type::opencl) {
+        auto& e = std::get<core::engine::opencl>(eng);
+        for (size_t i{1}; i < in_types.size(); i++) {
+            auto& weight = *input[i]->get_data_buffer();
+            auto& delta  = *input[i]->get_grad_buffer();
+            // TODO use input_shapes?
+            opt->update(delta, weight, e, input[i]->data[0].size());
+        }
     }
 }
 

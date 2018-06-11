@@ -97,12 +97,12 @@ auto sequential::forward(tensor const& first) -> tensor
     for (auto const& l : all_nodes)
         l->forward(eng, united_backend);
 
-    tensor outt;
+    tensor out_data;
     // FIXME
     // TODO output channel index?
-    all_nodes.back()->output_data(outt);
+    all_nodes.back()->output_data(out_data, eng);
     // TODO normalize output
-    return outt;
+    return out_data;
 }
 
 void sequential::backward(tensor const& first)
@@ -116,7 +116,7 @@ void sequential::backward(tensor const& first)
 void sequential::update_weight(optimizer::optimizer* opt)
 {
     for (auto& l : all_nodes)
-        l->update_weight(opt);
+        l->update_weight(opt, eng);
 }
 
 } // namespace topo

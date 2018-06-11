@@ -37,7 +37,10 @@ struct convolutional_op : framework::op_kernel
     void init_opencl_kernel(core::engine::opencl& eng)
     {
         if (!opencl_kernel_initialized) {
-            sources.emplace_back(opencl_kernel::conv_kernel_code.c_str(), opencl_kernel::conv_kernel_code.size());
+            sources.emplace_back(
+                opencl_kernel::conv_kernel_code.c_str(),
+                opencl_kernel::conv_kernel_code.size()
+            );
             program = cl::Program{eng.context, sources};
             if (program.build({eng.default_device}) != CL_SUCCESS) {
                 // FIXME
@@ -148,7 +151,10 @@ struct convolutional_grad_op : framework::op_kernel
     void init_opencl_kernel(core::engine::opencl& eng)
     {
         if (!opencl_kernel_initialized) {
-            sources.emplace_back(opencl_kernel::conv_kernel_code.c_str(), opencl_kernel::conv_kernel_code.size());
+            sources.emplace_back(
+                opencl_kernel::conv_kernel_code.c_str(),
+                opencl_kernel::conv_kernel_code.size()
+            );
             program = cl::Program{eng.context, sources};
             if (program.build({eng.default_device}) != CL_SUCCESS) {
                 // FIXME
