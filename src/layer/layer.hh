@@ -216,7 +216,9 @@ void layer::update_weight(optimizer::optimizer* opt)
 {
     // TODO mark trainable for data, here the input[0] is not trainable
     for (size_t i{1}; i < in_types.size(); i++) {
-        input[i]->merge_grads();
+        // TODO deprecated? for now, dw and db only has one outside dimension,
+        // not like input data
+        // input[i]->merge_grads();
         auto& weight = get_input_data(i)[0];
         opt->update(input[i]->grad[0], weight);
     }
