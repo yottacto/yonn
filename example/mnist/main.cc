@@ -6,9 +6,9 @@
 #include <cmath>
 #include "yonn.hh"
 
-std::string const COLOR_RST{"\e[0m"};
-std::string const COLOR_ACT{"\e[1;32m"};
-std::string const COLOR_ARG{"\e[1;35m"};
+// std::string const COLOR_RST{"\e[0m"};
+// std::string const COLOR_ACT{"\e[1;32m"};
+// std::string const COLOR_ARG{"\e[1;35m"};
 
 #define O true
 #define X false
@@ -23,10 +23,10 @@ static const bool tb[] = {
 #undef O
 #undef X
 
-#define INFO(act, arg) \
-    std::cerr << COLOR_ACT << act \
-        << COLOR_ARG << arg << "\n" \
-        << COLOR_RST
+// #define INFO(act, arg) \
+//     std::cerr << COLOR_ACT << act \
+//         << COLOR_ARG << arg << "\n" \
+//         << COLOR_RST
 
 int main()
 {
@@ -69,7 +69,7 @@ int main()
     yonn::ignore(opencl);
 
     // config
-    auto back = opencl;
+    auto back = internal;
     auto mini_batch_size = 32;
     auto alpha = 0.1;
     auto train_cut = 10000;
@@ -160,7 +160,6 @@ int main()
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
 
-    auto epoch = 0;
     auto first_batch = true;
     auto each_batch = [&](auto last = false) {
         if (first_batch) {
@@ -177,6 +176,7 @@ int main()
         }
     };
 
+    auto epoch = 10;
     auto first_epoch = true;
     auto each_epoch = [&](auto last = false) {
         // result for test images

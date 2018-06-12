@@ -14,6 +14,8 @@
 #include "util/util.hh"
 #include "util/timer.hh"
 
+#include <cassert>
+
 namespace yonn
 {
 
@@ -29,6 +31,7 @@ struct network
 
     void allocate_nsamples(size_t batch_size)
     {
+        this->batch_size = batch_size;
         in_batch.resize(batch_size);
         desired_out_batch.resize(batch_size);
 
@@ -139,6 +142,7 @@ struct network
         EachTest each_test
     ) -> result
     {
+        auto train_batch_size = batch_size;
         allocate_nsamples(1);
 
         result res;
@@ -149,6 +153,10 @@ struct network
             each_test(false);
         }
         each_test(true);
+
+        if (training)
+            allocate_nsamples(train_batch_size);
+
         return res;
     }
 
@@ -164,6 +172,10 @@ struct network
     tensor in_batch;
     std::vector<label_t> desired_out_batch;
     std::any cl_gradient;
+
+    size_t batch_size{0};
+    // network phase
+    bool training{false};
 
     util::timer forward_timer;
     util::timer backward_timer;
@@ -199,6 +211,9 @@ auto network<Net>::train(
     // TODO network phase
     // TODO reset or init weight
 
+    assert(inputs.size() == desired_outputs.size());
+
+    training = true;
     allocate_nsamples(batch_size);
 
     auto& e = std::get<core::engine::opencl>(net.eng);
@@ -221,18 +236,26 @@ auto network<Net>::train(
         }
         each_batch(true);
 
-        std::cerr << "forward:\t\t"
-            << forward_timer.elapsed_seconds() << "s.\n";
-        std::cerr << "backward:\t\t"
-            << backward_timer.elapsed_seconds() << "s.\n";
-        std::cerr << "weight update:\t\t"
-            << update_weight_timer.elapsed_seconds() << "s.\n";
+        auto const width = 24;
+        INFO(
+            std::setw(width) << "forward: ",
+            forward_timer.elapsed_seconds() << "s."
+        );
+        INFO(
+            std::setw(width) << "backward: ",
+            backward_timer.elapsed_seconds() << "s."
+        );
+        INFO(
+            std::setw(width) << "weight update: ",
+            update_weight_timer.elapsed_seconds() << "s.\n"
+        );
         forward_timer.reset();
         backward_timer.reset();
         update_weight_timer.reset();
     }
     each_epoch(true);
 
+    training = false;
     return true;
 }
 

@@ -7,6 +7,17 @@
 #include "type.hh"
 #include "tensor.hh"
 
+// TODO string view literals maybe?
+// TODO remove this...
+inline std::string const COLOR_RST{"\e[0m"};
+inline std::string const COLOR_ACT{"\e[1;32m"};
+inline std::string const COLOR_ARG{"\e[1;35m"};
+
+#define INFO(act, arg) \
+    std::cerr << COLOR_ACT << act \
+        << COLOR_ARG << arg << "\n" \
+        << COLOR_RST
+
 namespace yonn
 {
 
