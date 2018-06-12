@@ -146,7 +146,7 @@ void sequential::backward(cl::Buffer&)
 {
     // own_nodes.back()->output[0]->grad_buffer = first;
 
-    auto count = 0;
+    // auto count = 0;
     for (auto l = all_nodes.crbegin(); l != all_nodes.crend(); ++l) {
         util::timer t;
         t.start();
