@@ -176,7 +176,7 @@ int main()
         }
     };
 
-    auto epoch = 10;
+    auto epoch = 0;
     auto first_epoch = true;
     auto each_epoch = [&](auto last = false) {
         // result for test images
