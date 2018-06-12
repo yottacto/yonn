@@ -174,20 +174,24 @@ int main()
             yonn::util::progress_display test_pd(test_images.size());
             INFO("testing", " (" << test_images.size() << ") images:\n");
 
+            yonn::util::timer tt;
+            auto first_test = true;
             auto each_test = [&](auto last = false) {
+                if (first_test) {
+                    tt.reset();
+                    tt.start();
+                    first_test = false;
+                }
                 test_pd.tick();
                 test_pd.display(std::cerr);
                 if (last) {
                     std::cerr << "\ntest completed.\n";
+                    tt.stop();
+                    INFO("time elapsed: ", tt.elapsed_seconds() << "s.\n");
                 }
             };
 
-            yonn::util::timer tt;
-            tt.start();
             net.test(test_images, test_labels, each_test).print_detail(std::cerr);
-            tt.stop();
-
-            INFO("time elapsed: ", tt.elapsed_seconds() << "s.\n");
 
             pd.reset();
             first_batch = true;
