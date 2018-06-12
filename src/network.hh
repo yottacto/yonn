@@ -154,8 +154,10 @@ struct network
         }
         each_test(true);
 
-        if (training)
+        if (training) {
+            forward_timer.reset();
             allocate_nsamples(train_batch_size);
+        }
 
         return res;
     }
