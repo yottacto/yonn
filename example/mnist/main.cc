@@ -6,10 +6,6 @@
 #include <cmath>
 #include "yonn.hh"
 
-// std::string const COLOR_RST{"\e[0m"};
-// std::string const COLOR_ACT{"\e[1;32m"};
-// std::string const COLOR_ARG{"\e[1;35m"};
-
 #define O true
 #define X false
 static const bool tb[] = {
@@ -23,22 +19,8 @@ static const bool tb[] = {
 #undef O
 #undef X
 
-// #define INFO(act, arg) \
-//     std::cerr << COLOR_ACT << act \
-//         << COLOR_ARG << arg << "\n" \
-//         << COLOR_RST
-
 int main()
 {
-    using fc               = yonn::fully_connected_layer;
-    using conv             = yonn::convolutional_layer;
-    using avg_pool         = yonn::average_pooling_layer;
-    using tanh             = yonn::activation::tanh;
-    using leaky_relu       = yonn::activation::leaky_relu;
-    using connection_table = yonn::core::connection_table;
-
-    yonn::ignore(tanh{});
-
     yonn::tensor train_images, test_images;
     std::vector<yonn::label_t> train_labels, test_labels;
 
@@ -120,6 +102,16 @@ int main()
         std::cerr << "\n";
     }
 
+
+    using fc               = yonn::fully_connected_layer;
+    using conv             = yonn::convolutional_layer;
+    using avg_pool         = yonn::average_pooling_layer;
+    using tanh             = yonn::activation::tanh;
+    using leaky_relu       = yonn::activation::leaky_relu;
+    using connection_table = yonn::core::connection_table;
+
+    yonn::ignore(tanh{});
+
     yonn::network<yonn::topo::sequential> net{back};
 
     net << conv(32, 32, 5, 1, 6)
@@ -138,9 +130,7 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-    // yonn::optimizer::adam optimizer;
-    // yonn::optimizer::adagrad optimizer;
-    // yonn::optimizer::nesterov_momentum optimizer;
+
     yonn::optimizer::naive optimizer;
     optimizer.alpha = alpha;
 
@@ -149,12 +139,12 @@ int main()
     //     static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
     // );
 
-
     train_images.resize(train_cut);
     train_labels.resize(train_cut);
 
     test_images.resize(test_cut);
     test_labels.resize(test_cut);
+
 
 
     yonn::util::timer t;
@@ -211,13 +201,6 @@ int main()
         }
     };
 
-    // debug info
-    // auto print = [](auto const& v) {
-    //     for (auto i : v)
-    //         std::cerr << std::fixed << std::setprecision(10) << i << " ";
-    //     std::cerr << "\n";
-    // };
-
     net.train<yonn::loss_function::mse>(
         optimizer,
         train_images,
@@ -228,30 +211,6 @@ int main()
         each_epoch
     );
 
-    // print(net.net.all_nodes[10]->output[0]->data[0]);
-
-
-    // auto id = 10;
-    // std::cout << "-> " << test_labels[0] << " "
-    //     << net.forward_prop_max_index(test_images[0]) << "\n";
-    // print(net.forward_propagation(test_images[0])[0]);
-
-    // result for train images
-    // {
-    //     yonn::util::progress_display test_pd(train_images.size());
-    //     std::cerr << "testing (" << train_images.size() << ") images:\n";
-    //     auto each_test = [&](auto last = false) {
-    //         test_pd.tick();
-    //         test_pd.display(std::cerr);
-    //         if (last) {
-    //             std::cerr << "\ntest completed.\n";
-    //         }
-    //     };
-
-    //     auto r = net.test(train_images, train_labels, each_test);
-    //     r.print_detail(std::cerr);
-    // }
-
-    std::cerr << "hello world\n";
+    std::cerr << "hello mnist\n";
 }
 
