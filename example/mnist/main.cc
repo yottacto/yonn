@@ -121,6 +121,7 @@ int main()
 
     yonn::network<yonn::topo::sequential> net{back};
 
+
     net << conv(32, 32, 5, 1, 6)
         << leaky_relu()
         << avg_pool(28, 28, 6, 2)
