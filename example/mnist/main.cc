@@ -102,6 +102,13 @@ int main()
         std::cerr << "\n";
     }
 
+    train_images.resize(train_cut);
+    train_labels.resize(train_cut);
+
+    test_images.resize(test_cut);
+    test_labels.resize(test_cut);
+
+
 
     using fc               = yonn::fully_connected_layer;
     using conv             = yonn::convolutional_layer;
@@ -119,7 +126,6 @@ int main()
         << avg_pool(28, 28, 6, 2)
         << leaky_relu()
         << conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
-        // << conv(14, 14, 5, 6, 16)
         << leaky_relu()
         << avg_pool(10, 10, 16, 2)
         << leaky_relu()
@@ -130,7 +136,6 @@ int main()
 
     std::cerr << "net constructed.\n";
 
-
     yonn::optimizer::naive optimizer;
     optimizer.alpha = alpha;
 
@@ -138,12 +143,6 @@ int main()
     //     yonn::value_type(4),
     //     static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
     // );
-
-    train_images.resize(train_cut);
-    train_labels.resize(train_cut);
-
-    test_images.resize(test_cut);
-    test_labels.resize(test_cut);
 
 
 
