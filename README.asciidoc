@@ -92,9 +92,8 @@ net.train<yonn::loss_function::mse>(
 );
 ----
 
-Here `each_batch` and `each_epoch` are two callback functions, user can print
-useful information or doing some test inside the callback function. You can
-read the full code in
+Here `each_batch` and `each_epoch` are two callback functions, user can use it
+to print useful information or do some tests. You can read the full code in
 https://github.com/yottacto/yonn/tree/master/example/mnist[yonn/example/mnist/].
 
 To run the mnist example, you just need to:
@@ -105,15 +104,22 @@ To run the mnist example, you just need to:
 We have the data inside it and have some default config set in https://github.com/yottacto/yonn/blob/master/example/mnist/config[config].
 You can try different parameters or modify the code to play with it.
 
-.make test result with opencl backend
+.`make test` 's result with opencl backend
 [caption="mnist example: "]
 image::figures/mnist-example.jpg[mnist]
 
-== Progress
+== Presentation
 
-- stage i completed, works great on CPU
+We also made a simple presentation using `asciidoc` with `reveal.js` inside
+[yonn/presentaion]. You need to:
 
-=== Design revision
+    cd presentation/
+    make install
+    make
+
+`make install` will install the `asciidoctor-reveal.js` on local (you will need `npm` as a dependency).
+
+== Design revision
 
 - is it needful to make every layer's op inheirts from `op_kernel`
 - rule of five (zero), virtual destructor
