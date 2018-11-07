@@ -30,6 +30,85 @@
 - stochastic gradient descent
 - momentum and nesterov momentum
 
+== Example
+
+Basically, you can simply construct a netowrk like this:
+
+[source, cpp]
+----
+auto internal = yonn::core::backend_type::internal;
+
+auto backend = internal;
+
+using fc               = yonn::fully_connected_layer;
+using conv             = yonn::convolutional_layer;
+using avg_pool         = yonn::average_pooling_layer;
+using tanh             = yonn::activation::tanh;
+using connection_table = yonn::core::connection_table;
+
+yonn::network<yonn::topo::sequential> net{backend};
+
+net << conv(32, 32, 5, 1, 6)
+    << tanh()
+    << avg_pool(28, 28, 6, 2)
+    << tanh()
+    << conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
+    << tanh()
+    << avg_pool(10, 10, 16, 2)
+    << tanh()
+    << conv(5, 5, 5, 16, 120)
+    << tanh()
+    << fc(120, 10)
+    << tanh();
+
+std::cerr << "net constructed.\n";
+----
+
+And then train the net:
+
+[source, cpp]
+----
+// config
+auto mini_batch_size = 32;
+auto alpha = 0.06;
+auto train_cut = 10000;
+auto test_cut = 10000;
+auto epoch_size = 8;
+
+yonn::optimizer::naive optimizer;
+optimizer.alpha = alpha * std::min(
+    yonn::value_type(4),
+    static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
+);
+
+net.train<yonn::loss_function::mse>(
+    optimizer,
+    train_images,
+    train_labels,
+    mini_batch_size,
+    epoch_size,
+    each_batch,
+    each_epoch
+);
+----
+
+Here `each_batch` and `each_epoch` are two callback functions, user can print
+useful information or doing some test inside the callback function. You can
+read the full code in
+https://github.com/yottacto/yonn/tree/master/example/mnist[yonn/example/mnist/].
+
+To run the mnist example, you just need to:
+
+    cd example/mnist/
+    make test
+
+We have the data inside it and have some default config set in https://github.com/yottacto/yonn/blob/master/example/mnist/config[config].
+You can try different parameters or modify the code to play with it.
+
+.make test result with opencl backend
+[caption="mnist example: "]
+image::figures/mnist-example.jpg[mnist]
+
 == Progress
 
 - stage i completed, works great on CPU

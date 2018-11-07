@@ -53,10 +53,10 @@ int main()
     // config
     auto back = internal;
     auto mini_batch_size = 32;
-    auto alpha = 0.1;
+    auto alpha = 0.06;
     auto train_cut = 10000;
     auto test_cut = 10000;
-    auto epoch_size = 0;
+    auto epoch_size = 8;
 
     {
         std::fstream fin{"config"};
@@ -118,7 +118,6 @@ int main()
     using connection_table = yonn::core::connection_table;
 
     yonn::ignore(tanh{});
-
     yonn::network<yonn::topo::sequential> net{back};
 
 
@@ -144,8 +143,6 @@ int main()
     //     yonn::value_type(4),
     //     static_cast<yonn::value_type>(std::sqrt(mini_batch_size))
     // );
-
-
 
     yonn::util::timer t;
     yonn::util::progress_display pd(train_images.size());
