@@ -111,7 +111,7 @@ image::figures/mnist-example.jpg[mnist, width=60%]
 == Presentation
 
 We also made a simple presentation using `asciidoc` with `reveal.js` inside
-[yonn/presentaion]. You need to:
+https://github.com/yottacto/yonn/tree/master/presentation[yonn/presentation]. You need to:
 
     cd presentation/
     make install
