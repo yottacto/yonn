@@ -106,7 +106,7 @@ You can try different parameters or modify the code to play with it.
 
 .`make test` 's result with opencl backend
 [caption="mnist example: "]
-image::figures/mnist-example.jpg[mnist]
+image::figures/mnist-example.jpg[mnist, width=60%]
 
 == Presentation
 
