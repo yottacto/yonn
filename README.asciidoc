@@ -1,4 +1,34 @@
-== yonn
+= yonn
+
+*yonn* is a modern c++ implementation of deep learning framework.
+
+== Supported networks
+
+=== layer-types
+
+- average pooling layer
+- convolutional layer
+- fully connected layer
+
+=== activation functions
+
+- tanh
+- leaky relu
+
+=== loss functions
+
+- mean squared error
+- mean absolute error
+- softmax
+
+=== optimization algorithms
+
+- adagrad
+- rmsprop
+- adam
+- adamax
+- stochastic gradient descent
+- momentum and nesterov momentum
 
 == Progress
 
