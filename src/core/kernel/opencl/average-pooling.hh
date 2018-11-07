@@ -136,11 +136,11 @@ kernel void backward_dw(
     local value_type* lsum
 )
 {
-    int pool_area   = pool_h * pool_w;
-    int in_size  = in_d * in_h * in_w;
-    int in_area  = in_h * in_w;
-    int out_size = out_d * out_h * out_w;
-    int out_area = out_h * out_w;
+    int pool_area = pool_h * pool_w;
+    int in_size   = in_d * in_h * in_w;
+    int in_area   = in_h * in_w;
+    int out_size  = out_d * out_h * out_w;
+    int out_area  = out_h * out_w;
 
     int gid = get_global_id(0);
     int tid = gid;
