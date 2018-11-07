@@ -1,0 +1,196 @@
+= yonn
+:source-highlighter: highlightjs
+// :revealjs_theme: beige
+:revealjs_theme: night
+// :revealjs_theme: simple
+:customcss: style.css
+
+== yonn
+
+[%step]
+* simple framework
+* sequential network
+* highly customizable
+* opencl backend support
+* header only, easy to use
++
+[source, c++]
+----
+#include "yonn.hh"
+----
+
+== define a network
+
+[source, c++]
+----
+yonn::network<yonn::topo::sequential> net;
+----
+
+[transition-speed=fast, %notitle]
+== build your network: mnist
+
+[source, c++]
+----
+net << conv(32, 32, 5, 1, 6)
+    << leaky_relu()
+    << avg_pool(28, 28, 6, 2)
+    << leaky_relu()
+    << conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
+    << leaky_relu()
+    << avg_pool(10, 10, 16, 2)
+    << leaky_relu()
+    << conv(5, 5, 5, 16, 120)
+    << leaky_relu()
+    << fc(120, 10)
+    << leaky_relu();
+----
+
+== define a optimizer
+[source, c++]
+----
+yonn::optimizer::naive
+or
+yonn::optimizer::adagrad
+or
+yonn::optimizer::admax
+or
+yonn::optimizer::nesterov_momentum
+----
+
+== specific loss function and train!
+[source, c++]
+----
+net.train<yonn::loss_function::mse>(
+    optimizer,
+    train_images,
+    train_labels,
+    mini_batch_size,
+    epoch_size,
+    each_batch,
+    each_epoch
+);
+----
+
+== running on CPU
+
+[cols="^.^, ^.^, ^.^, ^.^, ^.^, ^.^", options="header", caption="tims in s"]
+|====
+| phase   | image count | total  | forwad | backward | update weight
+| traning | 60000       | 48.80s | 13.31s | 35.47s   | 0.01s
+| testing | 10000       | 2.40s  |        |          |
+|====
+
+== support different backend
+
+[source, c++]
+----
+yonn::network<yonn::topo::sequential> net{
+    yonn::core::backend_type::opencl // or internal
+};
+----
+
+[%step]
+* this can be specified per layer, but it will be slow
+* let's have a try
+
+== running on GPU
+
+[cols="^.^, ^.^, ^.^, ^.^, ^.^, ^.^", options="header", caption="tims in s"]
+|====
+| phase   | image count | total | forwad | backward | update weight
+| traning | 60000       | 8.41s | 0.87s  | 7.19s    | 0.32s
+| testing | 10000       | 2.42s |        |          |
+|====
+
+== design
+
+* `node` => layer (base) =>  layer / activation
+* `edge` store tensor (for data and grad)
+* `layer` store forward/backward operation
+* each `node` has multiple in/out channels
+* `node` 's channels connect with other nodes' channels
+
+== structures
+
+image::figures/structures.jpg[width="55%"]
+
+== code of line
+
+----
+..........................................................................
+ Language       Files        Lines         Code     Comments       Blanks
+..........................................................................
+ C++                6          669          493           62          114
+ C++ Header        44         6019         4750          321          948
+ Makefile           6          270          210           30           30
+..........................................................................
+ Total             56         6958         5453          413         1092
+..........................................................................
+----
+
+== optimizing a opencl kernel
+
+=== for instance
+
+averaging pooling layer's backward operation on weight
+
+=== why avg_pool has weight?
+
+ok, we add `weight` and `bias` to it, which gives us around 5% acc.
+
+=== naive
+
+[%step]
+* to calc:
++
+[source, c++]
+----
+dw[depth] = sum(sample, out_height, out_weight)
+----
++
+* parallelizing on depth (which is small)
+
+=== atomic add?
+
+[%step]
+* opencl kernel dont directly support floating-point number atomic
+
+=== local mem
+
+    dw[depth] = sum(sample, out_height, out_weight)
+
+[%step]
+* create a local memory to store above 3 dims
+* and `get_local_id(0) == 0` sum it up
+* and copy to global mem
+* but wait, opencl kernel cannot create a dynamic allocated local mem
+
+=== local mem
+
+[source, c++]
+----
+using bk_dw_type = cl::make_kernel<
+    int, int, int, int, int, int, int, int, int, int,
+    cl::Buffer&, cl::Buffer&, cl::Buffer&, cl::LocalSpaceArg
+>;
+
+cl::LocalSpaceArg local_mem = cl::Local(sizeof(value_type) * group_size);
+----
+
+[%step]
+* after apply this optimization, gained 2x boost
+
+// [background-transition=none]
+== Idioms / Practice
+
+[%step]
+* static polymorphsim
+* curiously recurring template pattern
+* `std::any` and `std::variant<>`
+* test-driven
+* good tools, e.g. `valgrind`
+
+== TODOs
+
+a lot of TODOs ...
+

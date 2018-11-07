@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>yonn</title><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"><link href="node_modules/reveal.js/css/reveal.css" rel="stylesheet"><link rel="stylesheet" href="node_modules/reveal.js/css/theme/night.css" id="theme"><link href="node_modules/reveal.js/lib/css/zenburn.css" rel="stylesheet"><script>var link = document.createElement( 'link' );
+link.rel = 'stylesheet';
+link.type = 'text/css';
+link.href = window.location.search.match( /print-pdf/gi ) ? "node_modules/reveal.js/css/print/pdf.css" : "node_modules/reveal.js/css/print/paper.css";
+document.getElementsByTagName( 'head' )[0].appendChild( link );</script><!--[if lt IE 9]><script src="node_modules/reveal.js/lib/js/html5shiv.js"></script><![endif]--><link rel="stylesheet" href="style.css"></head><body><div class="reveal"><div class="slides"><section class="title" data-state="title"><h1>yonn</h1></section><section id="yonn"><h2>yonn</h2><div class="ulist"><ul><li class="fragment"><p>simple framework</p></li><li class="fragment"><p>sequential network</p></li><li class="fragment"><p>highly customizable</p></li><li class="fragment"><p>opencl backend support</p></li><li class="fragment"><p>header only, easy to use</p><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">#include "yonn.hh"</code></pre></div></div></li></ul></div></section>
+<section id="define_a_network"><h2>define a network</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">yonn::network&lt;yonn::topo::sequential&gt; net;</code></pre></div></div></section>
+<section id="build_your_network_mnist" data-transition-speed="fast"><h2>build your network: mnist</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">net &lt;&lt; conv(32, 32, 5, 1, 6)
+    &lt;&lt; leaky_relu()
+    &lt;&lt; avg_pool(28, 28, 6, 2)
+    &lt;&lt; leaky_relu()
+    &lt;&lt; conv(14, 14, 5, 6, 16, connection_table(tb, 6, 16))
+    &lt;&lt; leaky_relu()
+    &lt;&lt; avg_pool(10, 10, 16, 2)
+    &lt;&lt; leaky_relu()
+    &lt;&lt; conv(5, 5, 5, 16, 120)
+    &lt;&lt; leaky_relu()
+    &lt;&lt; fc(120, 10)
+    &lt;&lt; leaky_relu();</code></pre></div></div></section>
+<section id="define_a_optimizer"><h2>define a optimizer</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">yonn::optimizer::naive
+or
+yonn::optimizer::adagrad
+or
+yonn::optimizer::admax
+or
+yonn::optimizer::nesterov_momentum</code></pre></div></div></section>
+<section id="specific_loss_function_and_train"><h2>specific loss function and train!</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">net.train&lt;yonn::loss_function::mse&gt;(
+    optimizer,
+    train_images,
+    train_labels,
+    mini_batch_size,
+    epoch_size,
+    each_batch,
+    each_epoch
+);</code></pre></div></div></section>
+<section id="running_on_cpu"><h2>running on CPU</h2><table class="tableblock frame-all grid-all" style="width:100%"><colgroup><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.667%"></colgroup><thead><tr><th class="tableblock halign-center valign-middle">phase</th><th class="tableblock halign-center valign-middle">image count</th><th class="tableblock halign-center valign-middle">total</th><th class="tableblock halign-center valign-middle">forwad</th><th class="tableblock halign-center valign-middle">backward</th><th class="tableblock halign-center valign-middle">update weight</th></tr><tbody><tr><td class="tableblock halign-center valign-middle"><p class="tableblock">traning</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">60000</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">48.80s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">13.31s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">35.47s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">0.01s</p></td></tr><tr><td class="tableblock halign-center valign-middle"><p class="tableblock">testing</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">10000</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">2.40s</p></td><td class="tableblock halign-center valign-middle"></td><td class="tableblock halign-center valign-middle"></td><td class="tableblock halign-center valign-middle"></td></tr></table></section>
+<section id="support_different_backend"><h2>support different backend</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">yonn::network&lt;yonn::topo::sequential&gt; net{
+    yonn::core::backend_type::opencl // or internal
+};</code></pre></div></div>
+<div class="ulist"><ul><li class="fragment"><p>this can be specified per layer, but it will be slow</p></li><li class="fragment"><p>let&#8217;s have a try</p></li></ul></div></section>
+<section id="running_on_gpu"><h2>running on GPU</h2><table class="tableblock frame-all grid-all" style="width:100%"><colgroup><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.6666%"><col style="width:16.667%"></colgroup><thead><tr><th class="tableblock halign-center valign-middle">phase</th><th class="tableblock halign-center valign-middle">image count</th><th class="tableblock halign-center valign-middle">total</th><th class="tableblock halign-center valign-middle">forwad</th><th class="tableblock halign-center valign-middle">backward</th><th class="tableblock halign-center valign-middle">update weight</th></tr><tbody><tr><td class="tableblock halign-center valign-middle"><p class="tableblock">traning</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">60000</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">8.41s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">0.87s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">7.19s</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">0.32s</p></td></tr><tr><td class="tableblock halign-center valign-middle"><p class="tableblock">testing</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">10000</p></td><td class="tableblock halign-center valign-middle"><p class="tableblock">2.42s</p></td><td class="tableblock halign-center valign-middle"></td><td class="tableblock halign-center valign-middle"></td><td class="tableblock halign-center valign-middle"></td></tr></table></section>
+<section id="design"><h2>design</h2><div class="ulist"><ul><li><p><code>node</code> &#8658; layer (base) &#8658;  layer / activation</p></li><li><p><code>edge</code> store tensor (for data and grad)</p></li><li><p><code>layer</code> store forward/backward operation</p></li><li><p>each <code>node</code> has multiple in/out channels</p></li><li><p><code>node</code> 's channels connect with other nodes' channels</p></li></ul></div></section>
+<section id="structures"><h2>structures</h2><div class="imageblock" style=""><img src="figures/structures.jpg" alt="structures" width="55%"></div></section>
+<section id="code_of_line"><h2>code of line</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape>..........................................................................
+ Language       Files        Lines         Code     Comments       Blanks
+..........................................................................
+ C++                6          669          493           62          114
+ C++ Header        44         6019         4750          321          948
+ Makefile           6          270          210           30           30
+..........................................................................
+ Total             56         6958         5453          413         1092
+..........................................................................</code></pre></div></div></section>
+<section><section id="optimizing_a_opencl_kernel"><h2>optimizing a opencl kernel</h2></section><section id="for_instance"><h2>for instance</h2><div class="paragraph"><p>averaging pooling layer&#8217;s backward operation on weight</p></div></section><section id="why_avg_pool_has_weight"><h2>why avg_pool has weight?</h2><div class="paragraph"><p>ok, we add <code>weight</code> and <code>bias</code> to it, which gives us around 5% acc.</p></div></section><section id="naive"><h2>naive</h2><div class="ulist"><ul><li class="fragment"><p>to calc:</p><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">dw[depth] = sum(sample, out_height, out_weight)</code></pre></div></div></li><li class="fragment"><p>parallelizing on depth (which is small)</p></li></ul></div></section><section id="atomic_add"><h2>atomic add?</h2><div class="ulist"><ul><li class="fragment"><p>opencl kernel dont directly support floating-point number atomic</p></li></ul></div></section><section id="local_mem"><h2>local mem</h2><div class="literalblock"><div class="content"><pre>dw[depth] = sum(sample, out_height, out_weight)</pre></div></div>
+<div class="ulist"><ul><li class="fragment"><p>create a local memory to store above 3 dims</p></li><li class="fragment"><p>and <code>get_local_id(0) == 0</code> sum it up</p></li><li class="fragment"><p>and copy to global mem</p></li><li class="fragment"><p>but wait, opencl kernel cannot create a dynamic allocated local mem</p></li></ul></div></section><section id="local_mem_2"><h2>local mem</h2><div class="listingblock"><div class="content"><pre class="highlight"><code data-noescape class="c++ language-c++">using bk_dw_type = cl::make_kernel&lt;
+    int, int, int, int, int, int, int, int, int, int,
+    cl::Buffer&amp;, cl::Buffer&amp;, cl::Buffer&amp;, cl::LocalSpaceArg
+&gt;;
+
+cl::LocalSpaceArg local_mem = cl::Local(sizeof(value_type) * group_size);</code></pre></div></div>
+<div class="ulist"><ul><li class="fragment"><p>after apply this optimization, gained 2x boost</p></li></ul></div></section></section>
+<section id="idioms_practice"><h2>Idioms / Practice</h2><div class="ulist"><ul><li class="fragment"><p>static polymorphsim</p></li><li class="fragment"><p>curiously recurring template pattern</p></li><li class="fragment"><p><code>std::any</code> and <code>std::variant&lt;&gt;</code></p></li><li class="fragment"><p>test-driven</p></li><li class="fragment"><p>good tools, e.g. <code>valgrind</code></p></li></ul></div></section>
+<section id="todos"><h2>TODOs</h2><div class="paragraph"><p>a lot of TODOs &#8230;&#8203;</p></div></section></div></div><script src="node_modules/reveal.js/lib/js/head.min.js"></script><script src="node_modules/reveal.js/js/reveal.js"></script><script>// See https://github.com/hakimel/reveal.js#configuration for a full list of configuration options
+Reveal.initialize({
+  // Display controls in the bottom right corner
+  controls: true,
+  // Display a presentation progress bar
+  progress: true,
+  // Set a per-slide timing for speaker notes, null means none
+  defaultTiming: null,
+  // Display the page number of the current slide
+  slideNumber: false,
+  // Push each slide change to the browser history
+  history: false,
+  // Enable keyboard shortcuts for navigation
+  keyboard: true,
+  // Enable the slide overview mode
+  overview: true,
+  // Vertical centering of slides
+  center: true,
+  // Enables touch navigation on devices with touch input
+  touch: true,
+  // Loop the presentation
+  loop: false,
+  // Change the presentation direction to be RTL
+  rtl: false,
+  // Randomizes the order of slides each time the presentation loads
+  shuffle: false,
+  // Turns fragments on and off globally
+  fragments: true,
+  // Flags if the presentation is running in an embedded mode,
+  // i.e. contained within a limited portion of the screen
+  embedded: false,
+  // Flags if we should show a help overlay when the questionmark
+  // key is pressed
+  help: true,
+  // Flags if speaker notes should be visible to all viewers
+  showNotes: false,
+  // Global override for autolaying embedded media (video/audio/iframe)
+  // - null: Media will only autoplay if data-autoplay is present
+  // - true: All media will autoplay, regardless of individual setting
+  // - false: No media will autoplay, regardless of individual setting
+  autoPlayMedia: null,
+  // Number of milliseconds between automatically proceeding to the
+  // next slide, disabled when set to 0, this value can be overwritten
+  // by using a data-autoslide attribute on your slides
+  autoSlide: 0,
+  // Stop auto-sliding after user input
+  autoSlideStoppable: true,
+  // Enable slide navigation via mouse wheel
+  mouseWheel: false,
+  // Hides the address bar on mobile devices
+  hideAddressBar: true,
+  // Opens links in an iframe preview overlay
+  previewLinks: false,
+  // Theme (e.g., beige, black, league, night, serif, simple, sky, solarized, white)
+  // NOTE setting the theme in the config no longer works in reveal.js 3.x
+  //theme: Reveal.getQueryHash().theme || 'night',
+  // Transition style (e.g., none, fade, slide, convex, concave, zoom)
+  transition: Reveal.getQueryHash().transition || 'slide',
+  // Transition speed (e.g., default, fast, slow)
+  transitionSpeed: 'default',
+  // Transition style for full page slide backgrounds (e.g., none, fade, slide, convex, concave, zoom)
+  backgroundTransition: 'fade',
+  // Number of slides away from the current that are visible
+  viewDistance: 3,
+  // Parallax background image (e.g., "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'")
+  parallaxBackgroundImage: '',
+  // Parallax background size in CSS syntax (e.g., "2100px 900px")
+  parallaxBackgroundSize: '',
+
+  // The "normal" size of the presentation, aspect ratio will be preserved
+  // when the presentation is scaled to fit different resolutions. Can be
+  // specified using percentage units.
+  width: 960,
+  height: 700,
+
+  // Factor of the display size that should remain empty around the content
+  margin: 0.1,
+
+  // Bounds for smallest/largest possible scale to apply to content
+  minScale: 0.2,
+  maxScale: 1.5,
+
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+      { src: 'node_modules/reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+      { src: 'node_modules/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'node_modules/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+      { src: 'node_modules/reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+      { src: 'node_modules/reveal.js/plugin/zoom-js/zoom.js', async: true },
+      { src: 'node_modules/reveal.js/plugin/notes/notes.js', async: true }
+  ]
+});</script></body></html>
